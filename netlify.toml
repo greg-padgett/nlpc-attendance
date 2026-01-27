@@ -1,0 +1,25 @@
+# Netlify Configuration for NLPC Attendance Tracker
+
+[build]
+  command = "npm run build"
+  functions = "netlify/functions"
+  publish = "frontend"
+
+# Environment variables (set in Netlify dashboard)
+# DATABASE_URL=postgresql://...
+
+# Redirects for SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Functions are automatically routed at /.netlify/functions/:function-name
+
+# Headers for CORS
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Methods = "GET, POST, DELETE, OPTIONS"

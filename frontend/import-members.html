@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Members - Church Attendance</title>
+    <style>
+        :root {
+            --color-primary: #2180A1;
+            --color-primary-hover: #1D748E;
+            --color-success: #32B8C6;
+            --color-error: #C01A2F;
+            --color-warning: #A84B2F;
+            --color-text: #134252;
+            --color-text-secondary: #627C71;
+            --color-bg: linear-gradient(135deg, #f5f9fb 0%, #f0f7fa 100%);
+            --color-surface: #ffffff;
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            font-family: var(--font-family);
+            background: var(--color-bg);
+            color: var(--color-text);
+            height: 100%;
+        }
+
+        body {
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+
+        .card {
+            background: var(--color-surface);
+            border: 1px solid rgba(33, 128, 161, 0.15);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(33, 128, 161, 0.08);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--color-text);
+        }
+
+        input[type="file"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(94, 82, 64, 0.3);
+            border-radius: 6px;
+            font-family: var(--font-family);
+            font-size: 14px;
+            color: var(--color-text);
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(33, 128, 161, 0.1);
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-family);
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn-primary:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary);
+            margin-left: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(33, 128, 161, 0.05);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: rgba(50, 184, 198, 0.1);
+            color: #1D6B73;
+            border: 1px solid rgba(50, 184, 198, 0.3);
+        }
+
+        .alert-error {
+            background: rgba(192, 21, 47, 0.1);
+            color: #7A0D22;
+            border: 1px solid rgba(192, 21, 47, 0.3);
+        }
+
+        .alert-info {
+            background: rgba(33, 128, 161, 0.1);
+            color: #134252;
+            border: 1px solid rgba(33, 128, 161, 0.3);
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .preview-table th {
+            background: rgba(33, 128, 161, 0.05);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--color-text);
+            border-bottom: 1px solid rgba(94, 82, 64, 0.2);
+        }
+
+        .preview-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(94, 82, 64, 0.1);
+            font-size: 13px;
+        }
+
+        .column-mapping {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .mapping-item {
+            padding: 12px;
+            background: rgba(33, 128, 161, 0.02);
+            border: 1px solid rgba(33, 128, 161, 0.1);
+            border-radius: 6px;
+        }
+
+        .mapping-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .mapping-value {
+            font-size: 14px;
+            color: var(--color-text);
+            font-weight: 500;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(33, 128, 161, 0.2);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .back-link {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <a href="/index.html" class="back-link">← Back to Attendance Tracker</a>
+
+    <div class="header">
+        <h1>✦ Import Members</h1>
+        <p class="subtitle">Import members from Planning Center CSV export</p>
+    </div>
+
+    <div class="card">
+        <h2>Step 1: Select CSV File</h2>
+        <div class="form-group">
+            <label for="csvFile">Choose Planning Center Members CSV</label>
+            <input type="file" id="csvFile" accept=".csv" />
+        </div>
+        <div id="fileAlert"></div>
+    </div>
+
+    <div id="previewSection" class="card hidden">
+        <h2>Step 2: Preview Data</h2>
+        <p style="margin-bottom: 16px; font-size: 14px; color: var(--color-text-secondary);">
+            Showing first 5 rows of <span id="rowCount">0</span> total members
+        </p>
+        <table class="preview-table" id="previewTable"></table>
+    </div>
+
+    <div id="mappingSection" class="card hidden">
+        <h2>Step 3: Column Mapping</h2>
+        <p style="margin-bottom: 16px; font-size: 14px; color: var(--color-text-secondary);">
+            Detected columns from Planning Center CSV:
+        </p>
+        <div class="column-mapping" id="mappingDisplay"></div>
+    </div>
+
+    <div class="card hidden" id="actionSection">
+        <button class="btn btn-primary" id="importBtn" onclick="performImport()">📤 Import to Database</button>
+        <button class="btn btn-secondary" onclick="resetForm()">↻ Start Over</button>
+    </div>
+
+    <div id="resultAlert"></div>
+
+    <script>
+        // Mapping from Planning Center CSV headers to database columns
+        const headerMapping = {
+            'First Name': 'first_name',
+            'Last Name': 'last_name',
+            'Home Email': 'email',
+            'Mobile Phone Number': 'phone',
+            'Birthdate': 'birthdate',
+            'Anniversary': 'anniversary',
+            'Home Address Street Line 1': 'address_line1',
+            'Home Address Street Line 2': 'address_line2',
+            'Home Address City': 'city',
+            'Home Address State': 'state',
+            'Home Address Zip Code': 'postal_code'
+        };
+
+        let csvData = [];
+        let csvHeaders = [];
+        let mappedData = [];
+
+        document.getElementById('csvFile').addEventListener('change', handleFileSelect);
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    parseCSV(event.target.result);
+                } catch (err) {
+                    showAlert('fileAlert', `Error parsing CSV: ${err.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) {
+                showAlert('fileAlert', 'CSV must contain headers and at least one row', 'error');
+                return;
+            }
+
+            // Parse headers
+            csvHeaders = parseCSVLine(lines[0]);
+            
+            // Parse data rows
+            csvData = [];
+            for (let i = 1; i < lines.length; i++) {
+                const row = parseCSVLine(lines[i]);
+                if (row.length > 0 && row.some(cell => cell.trim())) {
+                    csvData.push(row);
+                }
+            }
+
+            if (csvData.length === 0) {
+                showAlert('fileAlert', 'No valid data rows found', 'error');
+                return;
+            }
+
+            showAlert('fileAlert', `✓ Loaded ${csvData.length} members from CSV`, 'success');
+            mapColumns();
+            displayPreview();
+            showSection('previewSection');
+            showSection('mappingSection');
+            showSection('actionSection');
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let insideQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    insideQuotes = !insideQuotes;
+                } else if (char === ',' && !insideQuotes) {
+                    result.push(current.trim().replace(/^"|"$/g, ''));
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim().replace(/^"|"$/g, ''));
+            return result;
+        }
+
+        function mapColumns() {
+            mappedData = csvData.map(row => {
+                const member = {
+                    person_id: generateId(),
+                    id: `pc_${generateId()}`
+                };
+
+                csvHeaders.forEach((header, index) => {
+                    const dbColumn = headerMapping[header];
+                    if (dbColumn && row[index]) {
+                        member[dbColumn] = row[index].trim();
+                    }
+                });
+
+                return member;
+            });
+        }
+
+        function generateId() {
+            return Math.random().toString(36).substr(2, 9);
+        }
+
+        function displayPreview() {
+            const table = document.getElementById('previewTable');
+            document.getElementById('rowCount').textContent = mappedData.length;
+
+            // Headers
+            const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Birthdate', 'Address'];
+            let html = '<thead><tr>';
+            headers.forEach(h => html += `<th>${h}</th>`);
+            html += '</tr></thead><tbody>';
+
+            // Preview first 5 rows
+            mappedData.slice(0, 5).forEach(member => {
+                html += '<tr>';
+                html += `<td>${member.first_name || '—'}</td>`;
+                html += `<td>${member.last_name || '—'}</td>`;
+                html += `<td>${member.email || '—'}</td>`;
+                html += `<td>${member.phone || '—'}</td>`;
+                html += `<td>${member.birthdate || '—'}</td>`;
+                html += `<td>${member.address_line1 || '—'}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody>';
+            table.innerHTML = html;
+        }
+
+        function showSection(sectionId) {
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+
+        function showAlert(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-error' : 'alert-info';
+            el.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+        }
+
+        function displayMapping() {
+            const mapping = document.getElementById('mappingDisplay');
+            let html = '';
+
+            Object.entries(headerMapping).forEach(([pcHeader, dbColumn]) => {
+                const found = csvHeaders.includes(pcHeader);
+                const status = found ? '✓' : '✗';
+                const color = found ? '#32B8C6' : '#A84B2F';
+                html += `
+                    <div class="mapping-item" style="border-left: 4px solid ${color};">
+                        <div class="mapping-label">${status} ${dbColumn}</div>
+                        <div class="mapping-value">${found ? pcHeader : 'NOT FOUND'}</div>
+                    </div>
+                `;
+            });
+
+            mapping.innerHTML = html;
+        }
+
+        function mapColumns() {
+            mappedData = csvData.map(row => {
+                const member = {
+                    person_id: generateId(),
+                    id: `pc_${generateId()}`
+                };
+
+                csvHeaders.forEach((header, index) => {
+                    const dbColumn = headerMapping[header];
+                    if (dbColumn && row[index]) {
+                        member[dbColumn] = row[index].trim();
+                    }
+                });
+
+                return member;
+            });
+            displayMapping();
+        }
+
+        async function performImport() {
+            if (mappedData.length === 0) {
+                showAlert('resultAlert', 'No data to import', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('importBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>Importing...';
+
+            try {
+                const response = await fetch('/.netlify/functions/import-members', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ members: mappedData })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showAlert('resultAlert', `✓ Successfully imported ${result.imported} of ${result.total} members`, 'success');
+                    btn.innerHTML = '✓ Import Complete';
+                    setTimeout(() => resetForm(), 2000);
+                } else {
+                    const errorMsg = result.error || 'Import failed';
+                    showAlert('resultAlert', `✗ Import failed: ${errorMsg}`, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '📤 Import to Database';
+                }
+            } catch (err) {
+                showAlert('resultAlert', `✗ Error: ${err.message}`, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '📤 Import to Database';
+            }
+        }
+
+        function resetForm() {
+            csvData = [];
+            csvHeaders = [];
+            mappedData = [];
+            document.getElementById('csvFile').value = '';
+            document.getElementById('previewSection').classList.add('hidden');
+            document.getElementById('mappingSection').classList.add('hidden');
+            document.getElementById('actionSection').classList.add('hidden');
+            document.getElementById('fileAlert').innerHTML = '';
+            document.getElementById('resultAlert').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

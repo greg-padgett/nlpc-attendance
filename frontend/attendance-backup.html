@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Church Attendance Tracker</title>
+    <style>
+        :root {
+            --color-primary: #02a2bc;
+            --color-primary-hover: #0a7a92;
+            --color-success: #28a745;
+            --color-error: #dc3545;
+            --color-warning: #ffc107;
+            --color-text: #333;
+            --color-text-secondary: #666;
+            --color-bg: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%);
+            --color-surface: white;
+            --color-border: #e0e0e0;
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            font-family: var(--font-family);
+            background: var(--color-bg);
+            color: var(--color-text);
+        }
+
+        body {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        .header {
+            margin-bottom: 30px;
+            text-align: center;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+            background: white;
+            padding: 5px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid rgba(94, 82, 64, 0.2);
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 10px 16px;
+            background: none;
+            border: none;
+            color: var(--color-text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .nav-tab.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .nav-tab:hover {
+            color: var(--color-primary);
+        }
+
+        .nav-tabs {
+            border-bottom-color: var(--color-border);
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--color-text);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--color-border);
+            border-radius: 6px;
+            font-family: var(--font-family);
+            font-size: 14px;
+            color: var(--color-text);
+            background: white;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(2, 162, 188, 0.1);
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-family);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(2, 162, 188, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(33, 128, 161, 0.05);
+        }
+
+        .btn-danger {
+            background: var(--color-error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #A01627;
+        }
+
+        .btn-success {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #2AA3AE;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid rgba(94, 82, 64, 0.15);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+        }
+
+        .member-list {
+            list-style: none;
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: white;
+            border: 1px solid rgba(94, 82, 64, 0.1);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .member-contact {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .attendance-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid var(--color-primary);
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .summary-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: rgba(50, 184, 198, 0.1);
+            color: #1D6B73;
+            border: 1px solid rgba(50, 184, 198, 0.3);
+        }
+
+        .alert-error {
+            background: rgba(192, 21, 47, 0.1);
+            color: #7A0D22;
+            border: 1px solid rgba(192, 21, 47, 0.3);
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            padding-left: 36px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--color-text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        th {
+            background: rgba(33, 128, 161, 0.05);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--color-text);
+            border-bottom: 1px solid rgba(94, 82, 64, 0.2);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(94, 82, 64, 0.1);
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: rgba(33, 128, 161, 0.02);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-present {
+            background: rgba(50, 184, 198, 0.15);
+            color: #1D6B73;
+        }
+
+        .status-absent {
+            background: rgba(192, 21, 47, 0.15);
+            color: #7A0D22;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(33, 128, 161, 0.2);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⛪ Church Attendance Tracker</h1>
+        <p class="subtitle">Manage service attendance and member engagement</p>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchView('attendance')">📋 Attendance</button>
+        <button class="nav-tab" onclick="switchView('members')">👥 Members</button>
+        <button class="nav-tab" onclick="switchView('reports')">📊 Reports</button>
+        <button class="nav-tab" onclick="switchView('settings')">⚙️ Settings</button>
+    </div>
+
+    <!-- Attendance View -->
+    <div id="attendance" class="view active">
+        <div class="card">
+            <h2>Record Attendance</h2>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Service Date</label>
+                    <input type="date" id="serviceDate" />
+                </div>
+                <div class="form-group">
+                    <label>Service Type</label>
+                    <select id="serviceType">
+                        <option value="">Select a service</option>
+                        <option value="Sunday Morning">Sunday Morning</option>
+                        <option value="Sunday Evening">Sunday Evening</option>
+                        <option value="Wednesday Night">Wednesday Night</option>
+                        <option value="Prayer Meeting">Prayer Meeting</option>
+                        <option value="Youth Group">Youth Group</option>
+                    </select>
+                </div>
+            </div>
+            <div id="attendanceAlert"></div>
+        </div>
+
+        <div class="card">
+            <h3>Mark Attendance</h3>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="memberSearch" placeholder="Search members..." />
+            </div>
+            <ul id="membersList" class="member-list"></ul>
+        </div>
+
+        <div class="card actions">
+            <button class="btn btn-success" onclick="submitAttendance()">✓ Save Attendance</button>
+            <button class="btn btn-secondary" onclick="resetAttendance()">↻ Reset</button>
+        </div>
+    </div>
+
+    <!-- Members View -->
+    <div id="members" class="view">
+        <div class="card">
+            <h2>Manage Members</h2>
+            <button class="btn btn-primary" onclick="showAddMemberForm()">+ Add Member</button>
+            <div id="addMemberForm" style="display: none; margin-top: 20px;">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="memberFirstName" placeholder="First name" />
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="memberLastName" placeholder="Last name" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="memberEmail" placeholder="Email address" />
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="memberPhone" placeholder="Phone number" />
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="memberStatus">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Visitor">Visitor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Join Date</label>
+                        <input type="date" id="memberJoinDate" />
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="saveMember()">Save Member</button>
+                    <button class="btn btn-secondary" onclick="cancelAddMember()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Member Directory</h3>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="directorySearch" placeholder="Search members..." />
+            </div>
+            <table id="membersTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="membersTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Reports View -->
+    <div id="reports" class="view">
+        <div class="card">
+            <h2>Attendance Reports</h2>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>From Date</label>
+                    <input type="date" id="reportFromDate" />
+                </div>
+                <div class="form-group">
+                    <label>To Date</label>
+                    <input type="date" id="reportToDate" />
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+        </div>
+
+        <div id="reportResults"></div>
+    </div>
+
+    <!-- Settings View -->
+    <div id="settings" class="view">
+        <div class="card">
+            <h2>API Configuration</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 16px; font-size: 14px;">Configure your integrations with Neon, Twilio, and SendGrid for automated communications and data sync.</p>
+            
+            <div class="form-group">
+                <label>NEON API Key</label>
+                <input type="password" id="neonApiKey" placeholder="Enter your NEON API key" />
+                <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">Store securely - used for syncing member data</small>
+            </div>
+
+            <div class="form-group">
+                <label>Twilio Account SID</label>
+                <input type="password" id="twilioSid" placeholder="Enter Twilio Account SID" />
+            </div>
+
+            <div class="form-group">
+                <label>Twilio Auth Token</label>
+                <input type="password" id="twilioToken" placeholder="Enter Twilio Auth Token" />
+            </div>
+
+            <div class="form-group">
+                <label>Twilio Phone Number</label>
+                <input type="tel" id="twilioPhone" placeholder="+1 (XXX) XXX-XXXX" />
+                <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">For sending SMS attendance reminders</small>
+            </div>
+
+            <div class="form-group">
+                <label>SendGrid API Key</label>
+                <input type="password" id="sendgridApiKey" placeholder="Enter SendGrid API key" />
+                <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">For sending email reports and notifications</small>
+            </div>
+
+            <div class="form-group">
+                <label>From Email Address</label>
+                <input type="email" id="fromEmailAddress" placeholder="noreply@yourchurch.org" />
+            </div>
+
+            <button class="btn btn-primary" onclick="saveSettings()">💾 Save Configuration</button>
+            <div id="settingsAlert" style="margin-top: 16px;"></div>
+        </div>
+
+        <div class="card">
+            <h3>Data Management</h3>
+            <p style="color: var(--color-text-secondary); margin-bottom: 16px; font-size: 14px;">Import/export member data and attendance records</p>
+            <div class="actions">
+                <button class="btn btn-secondary" onclick="exportData()">↓ Export Data</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">↑ Import Members</button>
+                <input type="file" id="importFile" accept=".csv,.json" style="display: none;" onchange="importData()" />
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('serviceDate').value = today;
+        document.getElementById('reportFromDate').value = new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0];
+        document.getElementById('reportToDate').value = today;
+        document.getElementById('memberJoinDate').value = today;
+
+        // State - using localStorage for simplicity (will migrate to API)
+        let members = JSON.parse(localStorage.getItem('churchMembers')) || [];
+        let attendance = JSON.parse(localStorage.getItem('churchAttendance')) || [];
+        let selectedAttendees = new Set();
+        let apiConfig = JSON.parse(localStorage.getItem('churchApiConfig')) || {};
+
+        // View switching
+        function switchView(viewName) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewName).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (viewName === 'members') {
+                renderMembersList();
+                showMembersTable();
+            }
+            if (viewName === 'reports') document.getElementById('reportResults').innerHTML = '';
+        }
+
+        // Attendance Functions
+        function renderMembersList() {
+            const list = document.getElementById('membersList');
+            const searchTerm = document.getElementById('memberSearch').value.toLowerCase();
+            
+            const filtered = members.filter(m => 
+                `${m.firstName} ${m.lastName}`.toLowerCase().includes(searchTerm)
+            );
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No members found</p></div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map((member) => `
+                <li class="member-item">
+                    <div class="member-info">
+                        <div class="member-name">${member.firstName} ${member.lastName}</div>
+                        <div class="member-contact">${member.email || ''} ${member.phone || ''}</div>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" 
+                               ${selectedAttendees.has(member.id) ? 'checked' : ''} 
+                               onchange="toggleAttendee('${member.id}', this.checked)">
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function toggleAttendee(memberId, checked) {
+            if (checked) {
+                selectedAttendees.add(memberId);
+            } else {
+                selectedAttendees.delete(memberId);
+            }
+        }
+
+        function submitAttendance() {
+            const serviceDate = document.getElementById('serviceDate').value;
+            const serviceType = document.getElementById('serviceType').value;
+            const alertEl = document.getElementById('attendanceAlert');
+
+            if (!serviceDate || !serviceType) {
+                showAlert(alertEl, 'Please select both date and service type', 'error');
+                return;
+            }
+
+            const attendanceRecord = {
+                id: Date.now().toString(),
+                date: serviceDate,
+                serviceType: serviceType,
+                attendees: Array.from(selectedAttendees),
+                count: selectedAttendees.size,
+                timestamp: new Date().toISOString()
+            };
+
+            attendance.push(attendanceRecord);
+            localStorage.setItem('churchAttendance', JSON.stringify(attendance));
+            
+            showAlert(alertEl, `✓ Recorded ${selectedAttendees.size} attendees for ${serviceType}`, 'success');
+            setTimeout(() => resetAttendance(), 2000);
+        }
+
+        function resetAttendance() {
+            selectedAttendees.clear();
+            document.getElementById('memberSearch').value = '';
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            renderMembersList();
+        }
+
+        // Member Functions
+        function showAddMemberForm() {
+            document.getElementById('addMemberForm').style.display = 'block';
+        }
+
+        function cancelAddMember() {
+            document.getElementById('addMemberForm').style.display = 'none';
+            document.getElementById('memberFirstName').value = '';
+            document.getElementById('memberLastName').value = '';
+            document.getElementById('memberEmail').value = '';
+            document.getElementById('memberPhone').value = '';
+        }
+
+        function saveMember() {
+            const firstName = document.getElementById('memberFirstName').value.trim();
+            const lastName = document.getElementById('memberLastName').value.trim();
+            const email = document.getElementById('memberEmail').value.trim();
+            const phone = document.getElementById('memberPhone').value.trim();
+            const status = document.getElementById('memberStatus').value;
+            const joinDate = document.getElementById('memberJoinDate').value;
+
+            if (!firstName || !lastName) {
+                alert('Please enter first and last name');
+                return;
+            }
+
+            const newMember = {
+                id: Date.now().toString(),
+                firstName,
+                lastName,
+                email,
+                phone,
+                status,
+                joinDate,
+                createdAt: new Date().toISOString()
+            };
+
+            members.push(newMember);
+            localStorage.setItem('churchMembers', JSON.stringify(members));
+            
+            alert(`✓ ${firstName} ${lastName} added successfully!`);
+            cancelAddMember();
+            renderMembersList();
+            showMembersTable();
+        }
+
+        function showMembersTable() {
+            const tbody = document.getElementById('membersTableBody');
+            const searchTerm = document.getElementById('directorySearch').value.toLowerCase();
+            
+            const filtered = members.filter(m => 
+                `${m.firstName} ${m.lastName}`.toLowerCase().includes(searchTerm) ||
+                m.email.toLowerCase().includes(searchTerm)
+            );
+
+            tbody.innerHTML = filtered.map((member) => `
+                <tr>
+                    <td>${member.firstName} ${member.lastName}</td>
+                    <td>${member.email || '—'}</td>
+                    <td>${member.phone || '—'}</td>
+                    <td><span class="status-badge" style="background: ${member.status === 'Active' ? 'rgba(50,184,198,0.15)' : 'rgba(167,169,169,0.15)'}; color: ${member.status === 'Active' ? '#1D6B73' : '#627C71'}">${member.status}</span></td>
+                    <td><button class="btn btn-sm btn-danger" onclick="deleteMember('${member.id}')">Delete</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteMember(memberId) {
+            if (confirm('Are you sure?')) {
+                members = members.filter(m => m.id !== memberId);
+                localStorage.setItem('churchMembers', JSON.stringify(members));
+                showMembersTable();
+            }
+        }
+
+        // Reports
+        function generateReport() {
+            const fromDate = document.getElementById('reportFromDate').value;
+            const toDate = document.getElementById('reportToDate').value;
+            const resultsEl = document.getElementById('reportResults');
+
+            const filtered = attendance.filter(a => a.date >= fromDate && a.date <= toDate);
+
+            if (filtered.length === 0) {
+                resultsEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><p>No attendance data for this period</p></div>';
+                return;
+            }
+
+            const totalServices = filtered.length;
+            const totalAttendance = filtered.reduce((sum, a) => sum + a.count, 0);
+            const avgAttendance = Math.round(totalAttendance / totalServices);
+
+            const serviceBreakdown = {};
+            filtered.forEach(a => {
+                serviceBreakdown[a.serviceType] = (serviceBreakdown[a.serviceType] || 0) + a.count;
+            });
+
+            resultsEl.innerHTML = `
+                <div class="card">
+                    <h3>Report: ${fromDate} to ${toDate}</h3>
+                    <div class="attendance-summary">
+                        <div class="summary-item">
+                            <div class="summary-label">Total Services</div>
+                            <div class="summary-value">${totalServices}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Total Attendance</div>
+                            <div class="summary-value">${totalAttendance}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Average per Service</div>
+                            <div class="summary-value">${avgAttendance}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Attendance by Service Type</h3>
+                    <table>
+                        <thead><tr><th>Service Type</th><th>Total Attendees</th></tr></thead>
+                        <tbody>
+                            ${Object.entries(serviceBreakdown).map(([type, count]) => 
+                                `<tr><td>${type}</td><td>${count}</td></tr>`
+                            ).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Settings
+        function saveSettings() {
+            apiConfig = {
+                neonApiKey: document.getElementById('neonApiKey').value,
+                twilioSid: document.getElementById('twilioSid').value,
+                twilioToken: document.getElementById('twilioToken').value,
+                twilioPhone: document.getElementById('twilioPhone').value,
+                sendgridApiKey: document.getElementById('sendgridApiKey').value,
+                fromEmailAddress: document.getElementById('fromEmailAddress').value
+            };
+
+            localStorage.setItem('churchApiConfig', JSON.stringify(apiConfig));
+            const alertEl = document.getElementById('settingsAlert');
+            showAlert(alertEl, '✓ Configuration saved successfully', 'success');
+        }
+
+        function loadSettings() {
+            if (apiConfig.neonApiKey) document.getElementById('neonApiKey').value = apiConfig.neonApiKey;
+            if (apiConfig.twilioSid) document.getElementById('twilioSid').value = apiConfig.twilioSid;
+            if (apiConfig.twilioToken) document.getElementById('twilioToken').value = apiConfig.twilioToken;
+            if (apiConfig.twilioPhone) document.getElementById('twilioPhone').value = apiConfig.twilioPhone;
+            if (apiConfig.sendgridApiKey) document.getElementById('sendgridApiKey').value = apiConfig.sendgridApiKey;
+            if (apiConfig.fromEmailAddress) document.getElementById('fromEmailAddress').value = apiConfig.fromEmailAddress;
+        }
+
+        function exportData() {
+            const data = {
+                members,
+                attendance,
+                exportDate: new Date().toISOString()
+            };
+            const dataStr = JSON.stringify(data, null, 2);
+            const link = document.createElement('a');
+            link.href = 'text/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            link.download = `church-attendance-export-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function importData() {
+            const file = document.getElementById('importFile').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.members && Array.isArray(data.members)) {
+                        members = data.members;
+                        localStorage.setItem('churchMembers', JSON.stringify(members));
+                        alert(`Imported ${members.length} members successfully!`);
+                        renderMembersList();
+                        showMembersTable();
+                    }
+                } catch (err) {
+                    alert('Error importing file: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            document.getElementById('importFile').value = '';
+        }
+
+        // Utilities
+        function showAlert(el, message, type) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            el.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+            el.style.display = 'block';
+            if (type === 'error') setTimeout(() => { el.style.display = 'none'; }, 5000);
+        }
+
+        // Event listeners for search
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            renderMembersList();
+            
+            document.getElementById('memberSearch')?.addEventListener('input', renderMembersList);
+            document.getElementById('directorySearch')?.addEventListener('input', showMembersTable);
+        });
+
+        // Initial render
+        setTimeout(() => {
+            renderMembersList();
+            loadSettings();
+        }, 100);
+    </script>
+</body>
+</html>

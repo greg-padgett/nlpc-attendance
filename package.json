@@ -1,0 +1,25 @@
+{
+  "name": "nlpc-attendance-tracker",
+  "version": "1.0.0",
+  "description": "NLPC Church Attendance Tracker - Netlify + Neon Serverless",
+  "scripts": {
+    "build": "echo 'Build complete'",
+    "dev": "netlify dev",
+    "start": "netlify dev"
+  },
+  "keywords": [
+    "church",
+    "attendance",
+    "tracker",
+    "netlify",
+    "neon"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "netlify-cli": "^14.0.0"
+  }
+}
