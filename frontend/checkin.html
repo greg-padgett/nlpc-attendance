@@ -411,6 +411,10 @@
 
         <div class="controls">
             <div class="control-group">
+                <label>Date:</label>
+                <input type="date" id="serviceDate" onchange="changeDate(this.value)" />
+            </div>
+            <div class="control-group">
                 <label>Service:</label>
                 <select id="serviceType">
                     <option value="Sunday AM - EAC">Sunday AM - EAC</option>
@@ -441,10 +445,18 @@
     </div>
 
     <script>
+        // Get local date in YYYY-MM-DD format (avoids UTC timezone shift)
+        function getLocalDate(date = new Date()) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         let members = [];
         let checkedIn = new Set(JSON.parse(localStorage.getItem('quickCheckinStatus') || '[]'));
         let searchTerm = '';
-        let currentServiceDate = new Date().toISOString().split('T')[0];
+        let currentServiceDate = getLocalDate();
         let currentServiceType = '';
         const API_BASE = '/.netlify/functions';
         
@@ -522,7 +534,21 @@
             const date = new Date(dateStr + 'T00:00:00');
             return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
         }
+
+        // Initialize date picker and header
+        document.getElementById('serviceDate').value = currentServiceDate;
         document.getElementById('headerDate').textContent = formatDate(currentServiceDate);
+
+        // Change date handler
+        function changeDate(newDate) {
+            currentServiceDate = newDate;
+            document.getElementById('headerDate').textContent = formatDate(newDate);
+            checkedIn.clear();
+            saveState();
+            updateStats();
+            renderGrid();
+            loadExistingAttendance();
+        }
 
         function getInitials(firstName, lastName) {
             return (firstName[0] || '') + (lastName[0] || '');
