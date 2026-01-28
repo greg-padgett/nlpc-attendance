@@ -29,15 +29,16 @@ const generatePassword = (length = 8) => {
   return password;
 };
 
-// Update Vimeo video password via API
-const updateVimeoPassword = async (videoId, newPassword) => {
+// Update Vimeo Live Event password via API
+const updateVimeoPassword = async (eventId, newPassword) => {
   if (!VIMEO_ACCESS_TOKEN) {
     throw new Error('VIMEO_ACCESS_TOKEN not configured');
   }
 
   return new Promise((resolve, reject) => {
+    // For Live Events, use stream_privacy instead of privacy
     const payload = JSON.stringify({
-      privacy: {
+      stream_privacy: {
         view: 'password'
       },
       password: newPassword
@@ -46,7 +47,7 @@ const updateVimeoPassword = async (videoId, newPassword) => {
     const options = {
       hostname: 'api.vimeo.com',
       port: 443,
-      path: `/videos/${videoId}`,
+      path: `/live_events/${eventId}`,
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
