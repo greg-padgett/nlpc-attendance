@@ -602,10 +602,83 @@
         </div>
     </div>
 
+    <!-- Edit Member Modal -->
+    <div id="editMemberModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">Edit Member</h3>
+                <button onclick="closeEditMemberModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+            </div>
+            <form id="editMemberForm" onsubmit="submitEditMember(event)">
+                <input type="hidden" id="editMemberId" />
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input type="text" id="editMemberFirstName" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" id="editMemberLastName" required />
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="editMemberEmail" />
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="editMemberPhone" />
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Birthdate</label>
+                        <input type="date" id="editMemberBirthdate" />
+                    </div>
+                    <div class="form-group">
+                        <label>Anniversary</label>
+                        <input type="date" id="editMemberAnniversary" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" id="editMemberAddress" placeholder="Street address" />
+                </div>
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="editMemberCity" />
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <input type="text" id="editMemberState" />
+                    </div>
+                    <div class="form-group">
+                        <label>Zip</label>
+                        <input type="text" id="editMemberZip" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="editMemberStatus">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+                <div id="editMemberAlert"></div>
+                <div class="actions" style="justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditMemberModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Login Overlay -->
     <div id="loginOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%); z-index: 2000; align-items: center; justify-content: center;">
         <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
-            <img src="/logo.png" alt="NLPC Logo" style="height: 80px; width: auto; margin-bottom: 20px;">
+            <img src="/logo.png" alt="NLPC Logo" style="height: 80px; width: auto; margin-bottom: 20px; border-radius: 8px; padding: 12px 20px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%);">
             <h2 style="margin: 0 0 8px 0; color: #333;">Church Attendance Tracker</h2>
             <p style="color: #666; margin-bottom: 24px;">Please enter the password to continue</p>
             <form onsubmit="verifyPassword(event)">
@@ -843,7 +916,10 @@
                     <td>${city}</td>
                     <td>${state}</td>
                     <td><span class="status-badge" style="background: ${status === 'Active' ? 'rgba(50,184,198,0.15)' : 'rgba(167,169,169,0.15)'}; color: ${status === 'Active' ? '#1D6B73' : '#627C71'}">${status}</span></td>
-                    <td><button class="btn btn-sm btn-danger" onclick="deleteMember('${member.id}')">Delete</button></td>
+                    <td style="white-space: nowrap;">
+                        <button class="btn btn-sm btn-secondary" onclick="openEditMemberModal('${member.id}')" style="margin-right: 4px;">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMember('${member.id}')">Delete</button>
+                    </td>
                 </tr>
             `;
             }).join('');
@@ -1236,6 +1312,87 @@
             }
         }
 
+        // Edit Member Modal Functions
+        function openEditMemberModal(memberId) {
+            const member = members.find(m => m.id === memberId);
+            if (!member) {
+                alert('Member not found');
+                return;
+            }
+
+            document.getElementById('editMemberId').value = member.id;
+            document.getElementById('editMemberFirstName').value = member.first_name || member.firstName || '';
+            document.getElementById('editMemberLastName').value = member.last_name || member.lastName || '';
+            document.getElementById('editMemberEmail').value = member.email || '';
+            document.getElementById('editMemberPhone').value = member.phone || '';
+            document.getElementById('editMemberBirthdate').value = member.birthdate ? member.birthdate.split('T')[0] : '';
+            document.getElementById('editMemberAnniversary').value = member.anniversary ? member.anniversary.split('T')[0] : '';
+            document.getElementById('editMemberAddress').value = member.address_line1 || '';
+            document.getElementById('editMemberCity').value = member.city || '';
+            document.getElementById('editMemberState').value = member.state || '';
+            document.getElementById('editMemberZip').value = member.postal_code || '';
+            document.getElementById('editMemberStatus').value = member.status || 'Active';
+            document.getElementById('editMemberAlert').innerHTML = '';
+            document.getElementById('editMemberModal').style.display = 'flex';
+        }
+
+        function closeEditMemberModal() {
+            document.getElementById('editMemberModal').style.display = 'none';
+        }
+
+        async function submitEditMember(event) {
+            event.preventDefault();
+            const alertEl = document.getElementById('editMemberAlert');
+            const memberId = document.getElementById('editMemberId').value;
+
+            const memberData = {
+                id: memberId,
+                first_name: document.getElementById('editMemberFirstName').value.trim(),
+                last_name: document.getElementById('editMemberLastName').value.trim(),
+                email: document.getElementById('editMemberEmail').value.trim() || null,
+                phone: document.getElementById('editMemberPhone').value.trim() || null,
+                birthdate: document.getElementById('editMemberBirthdate').value || null,
+                anniversary: document.getElementById('editMemberAnniversary').value || null,
+                address_line1: document.getElementById('editMemberAddress').value.trim() || null,
+                city: document.getElementById('editMemberCity').value.trim() || null,
+                state: document.getElementById('editMemberState').value.trim() || null,
+                postal_code: document.getElementById('editMemberZip').value.trim() || null,
+                status: document.getElementById('editMemberStatus').value
+            };
+
+            if (!memberData.first_name || !memberData.last_name) {
+                showAlert(alertEl, 'First name and last name are required', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/members`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(memberData)
+                });
+
+                if (response.ok) {
+                    const updatedMember = await response.json();
+                    // Update the member in the local array
+                    const index = members.findIndex(m => m.id === memberId);
+                    if (index !== -1) {
+                        members[index] = updatedMember;
+                    }
+                    showMembersTable();
+                    renderMembersList();
+                    showAlert(alertEl, `✓ ${memberData.first_name} ${memberData.last_name} updated successfully!`, 'success');
+                    setTimeout(() => closeEditMemberModal(), 1500);
+                } else {
+                    const error = await response.json();
+                    showAlert(alertEl, `Error: ${error.error || 'Failed to update member'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating member:', error);
+                showAlert(alertEl, `Error: ${error.message}`, 'error');
+            }
+        }
+
         // Authentication Functions
         function checkAuth() {
             const isAuthenticated = sessionStorage.getItem('nlpc_authenticated') === 'true';
@@ -1297,6 +1454,9 @@
         // Close modal when clicking outside
         document.getElementById('addMemberModal')?.addEventListener('click', function(e) {
             if (e.target === this) closeAddMemberModal();
+        });
+        document.getElementById('editMemberModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeEditMemberModal();
         });
 
         // Initial load
