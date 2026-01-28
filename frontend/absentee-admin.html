@@ -673,6 +673,7 @@
                             <th>Stream Sent</th>
                             <th>Prayer Request</th>
                             <th>Submitted</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="checkinsTableBody">
@@ -947,7 +948,7 @@
                     }
 
                     tbody.innerHTML = data.checkins.map(c => `
-                        <tr>
+                        <tr id="row-${c.id}">
                             <td><strong>${c.name}</strong></td>
                             <td><a href="tel:${c.phone}" style="color: var(--color-primary);">${c.phone}</a></td>
                             <td><span class="reason-badge ${getReasonClass(c.reason)}">${formatReason(c.reason)}</span></td>
@@ -958,11 +959,42 @@
                             }</td>
                             <td class="prayer-text">${c.prayer_request || '—'}</td>
                             <td style="white-space: nowrap;">${new Date(c.created_at).toLocaleString()}</td>
+                            <td><button class="btn btn-sm btn-danger" onclick="deleteCheckin('${c.id}', '${c.name.replace(/'/g, "\\'")}')">Delete</button></td>
                         </tr>
                     `).join('');
                 }
             } catch (error) {
                 console.error('Error loading check-ins:', error);
+            }
+        }
+
+        // Delete Check-In
+        async function deleteCheckin(id, name) {
+            if (!confirm(`Delete check-in for "${name}"? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/delete-absentee?id=${id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Remove row from table
+                    const row = document.getElementById(`row-${id}`);
+                    if (row) {
+                        row.remove();
+                    }
+                    // Reload dashboard if on that view
+                    loadDashboard();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete'));
+                }
+            } catch (error) {
+                console.error('Error deleting check-in:', error);
+                alert('Error deleting check-in');
             }
         }
 
