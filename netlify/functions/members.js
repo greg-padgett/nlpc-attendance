@@ -41,7 +41,7 @@ async function initDatabase() {
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Content-Type': 'application/json'
 };
 
@@ -88,37 +88,44 @@ exports.handler = async (event) => {
 
     // POST /members (create)
     if (method === 'POST') {
-      const { id, first_name, last_name, email, phone, birthdate, anniversary, address_line1, address_line2, city, state, postal_code } = body;
+      const { id, first_name, last_name, email, phone, birthdate, anniversary, address_line1, address_line2, city, state, postal_code, status } = body;
 
       if (!first_name || !last_name) {
         return respond(400, { error: 'first_name and last_name required' });
       }
 
       const result = await pool.query(
-        `INSERT INTO members (id, first_name, last_name, email, phone, birthdate, anniversary, address_line1, address_line2, city, state, postal_code, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        `INSERT INTO members (id, first_name, last_name, email, phone, birthdate, anniversary, address_line1, address_line2, city, state, postal_code, status, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
          RETURNING *`,
-        [id || `member_${Date.now().toString()}`, first_name, last_name, email || null, phone || null, birthdate || null, anniversary || null, address_line1 || null, address_line2 || null, city || null, state || null, postal_code || null, new Date().toISOString()]
+        [id || `member_${Date.now().toString()}`, first_name, last_name, email || null, phone || null, birthdate || null, anniversary || null, address_line1 || null, address_line2 || null, city || null, state || null, postal_code || null, status || 'Active', new Date().toISOString()]
       );
 
       return respond(201, result.rows[0]);
     }
 
-    // PUT /members/:id (update)
-    if (method === 'PUT' && path.includes('/members/')) {
-      const idMatch = path.match(/members\/([^\/]+)/);
-      if (!idMatch) return respond(400, { error: 'Missing member ID' });
-      const id = idMatch[1];
+    // PUT /members or /members/:id (update)
+    if (method === 'PUT') {
+      // Get ID from URL path or from body
+      let id;
+      if (path.includes('/members/')) {
+        const idMatch = path.match(/members\/([^\/]+)/);
+        id = idMatch ? idMatch[1] : null;
+      }
+      if (!id && body.id) {
+        id = body.id;
+      }
+      if (!id) return respond(400, { error: 'Missing member ID' });
 
-      const { first_name, last_name, email, phone, birthdate, anniversary, address_line1, address_line2, city, state, postal_code } = body;
+      const { first_name, last_name, email, phone, birthdate, anniversary, address_line1, address_line2, city, state, postal_code, status } = body;
 
       const result = await pool.query(
-        `UPDATE members SET first_name = $1, last_name = $2, email = $3, phone = $4, 
-                           birthdate = $5, anniversary = $6, address_line1 = $7, 
-                           address_line2 = $8, city = $9, state = $10, postal_code = $11, 
-                           updated_at = $12
-         WHERE id = $13 RETURNING *`,
-        [first_name, last_name, email, phone, birthdate, anniversary, address_line1, address_line2, city, state, postal_code, new Date().toISOString(), id]
+        `UPDATE members SET first_name = $1, last_name = $2, email = $3, phone = $4,
+                           birthdate = $5, anniversary = $6, address_line1 = $7,
+                           address_line2 = $8, city = $9, state = $10, postal_code = $11,
+                           status = $12, updated_at = $13
+         WHERE id = $14 RETURNING *`,
+        [first_name, last_name, email, phone, birthdate, anniversary, address_line1, address_line2, city, state, postal_code, status || 'Active', new Date().toISOString(), id]
       );
 
       if (result.rows.length === 0) return respond(404, { error: 'Member not found' });
