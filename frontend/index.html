@@ -6,16 +6,16 @@
     <title>Church Attendance Tracker</title>
     <style>
         :root {
-            --color-primary: #2180A1;
-            --color-primary-hover: #1D748E;
-            --color-success: #32B8C6;
-            --color-error: #C01A2F;
-            --color-warning: #A84B2F;
-            --color-text: #134252;
-            --color-text-secondary: #627C71;
-            --color-bg: linear-gradient(135deg, #f5f9fb 0%, #f0f7fa 100%);
+            --color-primary: #02a2bc;
+            --color-primary-hover: #0a7a92;
+            --color-success: #28a745;
+            --color-error: #dc3545;
+            --color-warning: #ffc107;
+            --color-text: #333;
+            --color-text-secondary: #666;
+            --color-bg: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%);
             --color-surface: #ffffff;
-            --color-border: #2180A1;
+            --color-border: #e0e0e0;
             --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
@@ -402,11 +402,12 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+    <div class="header" style="background: var(--color-bg); padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <img src="/logo.png" alt="NLPC Logo" style="height: 80px; width: auto; border-radius: 8px; padding: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); background: white;">
             <div>
-                <h1 style="margin: 0;">✦ Church Attendance Tracker</h1>
-                <p class="subtitle" style="margin: 4px 0 0 0;">Connected to database • Real-time sync</p>
+                <h1 style="margin: 0; color: white;">Church Attendance Tracker</h1>
+                <p class="subtitle" style="margin: 4px 0 0 0; color: rgba(255,255,255,0.9);">Connected to database • Real-time sync</p>
             </div>
         </div>
     </div>
@@ -454,6 +455,7 @@
         <div class="card actions">
             <button class="btn btn-success" onclick="submitAttendance()">✓ Save Attendance</button>
             <button class="btn btn-secondary" onclick="resetAttendance()">↻ Reset</button>
+            <button class="btn btn-danger" onclick="deleteService()">🗑 Delete Service</button>
         </div>
     </div>
 
@@ -606,9 +608,11 @@
                 return;
             }
 
+            // Allow saving with zero attendees (will clear the service record)
             if (selectedAttendees.size === 0) {
-                showAlert(alertEl, 'Please select at least one attendee', 'error');
-                return;
+                if (!confirm('No members selected. This will clear all attendance for this service. Continue?')) {
+                    return;
+                }
             }
 
             try {
@@ -643,6 +647,46 @@
             document.getElementById('memberSearch').value = '';
             document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
             renderMembersList();
+        }
+
+        async function deleteService() {
+            const serviceDate = document.getElementById('serviceDate').value;
+            const serviceType = document.getElementById('serviceType').value;
+            const alertEl = document.getElementById('attendanceAlert');
+
+            if (!serviceDate || !serviceType) {
+                showAlert(alertEl, 'Please select both date and service type', 'error');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to DELETE all attendance records for ${serviceType} on ${serviceDate}? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/delete-attendance`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        date: serviceDate,
+                        serviceType: serviceType
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Service deleted:', result);
+                    showAlert(alertEl, `✓ Deleted ${result.deletedCount} attendance records for ${serviceType}`, 'success');
+                    resetAttendance();
+                } else {
+                    const error = await response.json();
+                    console.error('API error:', error);
+                    showAlert(alertEl, `Error: ${error.error || 'Failed to delete'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting service:', error);
+                showAlert(alertEl, `Error: ${error.message}`, 'error');
+            }
         }
 
         // Member Functions
