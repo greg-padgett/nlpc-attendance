@@ -240,6 +240,21 @@
     </style>
 </head>
 <body>
+    <!-- Login Overlay -->
+    <div id="loginOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <h2 style="margin: 0 0 8px 0; color: #333;">Import Members</h2>
+            <p style="color: #666; margin-bottom: 24px;">Please enter the password to continue</p>
+            <form onsubmit="verifyPassword(event)">
+                <div style="margin-bottom: 16px;">
+                    <input type="password" id="loginPassword" placeholder="Enter password" required style="width: 100%; padding: 10px 12px; border: 1px solid rgba(94, 82, 64, 0.3); border-radius: 6px; text-align: center; font-size: 16px;" />
+                </div>
+                <div id="loginAlert" style="margin-bottom: 16px;"></div>
+                <button type="submit" style="width: 100%; padding: 12px; background: #2180A1; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer;">Login</button>
+            </form>
+        </div>
+    </div>
+
     <a href="/index.html" class="back-link">← Back to Attendance Tracker</a>
 
     <div class="header">
@@ -511,6 +526,53 @@
             document.getElementById('fileAlert').innerHTML = '';
             document.getElementById('resultAlert').innerHTML = '';
         }
+
+        // Authentication Functions
+        function checkAuth() {
+            const isAuthenticated = sessionStorage.getItem('nlpc_authenticated') === 'true';
+            const loginOverlay = document.getElementById('loginOverlay');
+
+            if (!isAuthenticated) {
+                loginOverlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                loginOverlay.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+
+        async function verifyPassword(event) {
+            event.preventDefault();
+            const password = document.getElementById('loginPassword').value;
+            const alertEl = document.getElementById('loginAlert');
+
+            try {
+                const response = await fetch('/.netlify/functions/verify-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        sessionStorage.setItem('nlpc_authenticated', 'true');
+                        document.getElementById('loginOverlay').style.display = 'none';
+                        document.body.style.overflow = '';
+                    } else {
+                        alertEl.innerHTML = '<div class="alert alert-error">Incorrect password</div>';
+                    }
+                } else {
+                    alertEl.innerHTML = '<div class="alert alert-error">Incorrect password</div>';
+                }
+            } catch (error) {
+                console.error('Error verifying password:', error);
+                alertEl.innerHTML = '<div class="alert alert-error">Error connecting to server</div>';
+            }
+        }
+
+        // Check auth on load
+        document.addEventListener('DOMContentLoaded', checkAuth);
     </script>
 </body>
 </html>

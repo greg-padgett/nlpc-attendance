@@ -487,7 +487,10 @@
         </div>
 
         <div class="card">
-            <h3>Member Directory</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="margin: 0;">Member Directory</h3>
+                <button class="btn btn-success" onclick="openAddMemberModal()">+ Add Member</button>
+            </div>
             <div class="search-box">
                 <span class="search-icon">🔍</span>
                 <input type="text" id="directorySearch" placeholder="Search members..." />
@@ -532,6 +535,87 @@
         </div>
 
         <div id="reportResults"></div>
+    </div>
+
+    <!-- Add Member Modal -->
+    <div id="addMemberModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">Add New Member</h3>
+                <button onclick="closeAddMemberModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+            </div>
+            <form id="addMemberForm" onsubmit="submitNewMember(event)">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input type="text" id="newMemberFirstName" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" id="newMemberLastName" required />
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="newMemberEmail" />
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="newMemberPhone" />
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Birthdate</label>
+                        <input type="date" id="newMemberBirthdate" />
+                    </div>
+                    <div class="form-group">
+                        <label>Anniversary</label>
+                        <input type="date" id="newMemberAnniversary" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" id="newMemberAddress" placeholder="Street address" />
+                </div>
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="newMemberCity" />
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <input type="text" id="newMemberState" />
+                    </div>
+                    <div class="form-group">
+                        <label>Zip</label>
+                        <input type="text" id="newMemberZip" />
+                    </div>
+                </div>
+                <div id="addMemberAlert"></div>
+                <div class="actions" style="justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddMemberModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Overlay -->
+    <div id="loginOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <img src="/logo.png" alt="NLPC Logo" style="height: 80px; width: auto; margin-bottom: 20px;">
+            <h2 style="margin: 0 0 8px 0; color: #333;">Church Attendance Tracker</h2>
+            <p style="color: #666; margin-bottom: 24px;">Please enter the password to continue</p>
+            <form onsubmit="verifyPassword(event)">
+                <div class="form-group">
+                    <input type="password" id="loginPassword" placeholder="Enter password" required style="text-align: center; font-size: 16px;" />
+                </div>
+                <div id="loginAlert" style="margin-bottom: 16px;"></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Login</button>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -1095,17 +1179,132 @@
             if (type === 'error') setTimeout(() => { el.style.display = 'none'; }, 5000);
         }
 
+        // Add Member Modal Functions
+        function openAddMemberModal() {
+            document.getElementById('addMemberModal').style.display = 'flex';
+            document.getElementById('addMemberForm').reset();
+            document.getElementById('addMemberAlert').innerHTML = '';
+        }
+
+        function closeAddMemberModal() {
+            document.getElementById('addMemberModal').style.display = 'none';
+        }
+
+        async function submitNewMember(event) {
+            event.preventDefault();
+            const alertEl = document.getElementById('addMemberAlert');
+
+            const memberData = {
+                first_name: document.getElementById('newMemberFirstName').value.trim(),
+                last_name: document.getElementById('newMemberLastName').value.trim(),
+                email: document.getElementById('newMemberEmail').value.trim() || null,
+                phone: document.getElementById('newMemberPhone').value.trim() || null,
+                birthdate: document.getElementById('newMemberBirthdate').value || null,
+                anniversary: document.getElementById('newMemberAnniversary').value || null,
+                address_line1: document.getElementById('newMemberAddress').value.trim() || null,
+                city: document.getElementById('newMemberCity').value.trim() || null,
+                state: document.getElementById('newMemberState').value.trim() || null,
+                postal_code: document.getElementById('newMemberZip').value.trim() || null
+            };
+
+            if (!memberData.first_name || !memberData.last_name) {
+                showAlert(alertEl, 'First name and last name are required', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/members`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(memberData)
+                });
+
+                if (response.ok) {
+                    const newMember = await response.json();
+                    members.push(newMember);
+                    showMembersTable();
+                    renderMembersList();
+                    showAlert(alertEl, `✓ ${memberData.first_name} ${memberData.last_name} added successfully!`, 'success');
+                    setTimeout(() => closeAddMemberModal(), 1500);
+                } else {
+                    const error = await response.json();
+                    showAlert(alertEl, `Error: ${error.error || 'Failed to add member'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error adding member:', error);
+                showAlert(alertEl, `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Authentication Functions
+        function checkAuth() {
+            const isAuthenticated = sessionStorage.getItem('nlpc_authenticated') === 'true';
+            const loginOverlay = document.getElementById('loginOverlay');
+
+            if (!isAuthenticated) {
+                loginOverlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                loginOverlay.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+
+        async function verifyPassword(event) {
+            event.preventDefault();
+            const password = document.getElementById('loginPassword').value;
+            const alertEl = document.getElementById('loginAlert');
+
+            try {
+                const response = await fetch(`${API_BASE}/verify-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        sessionStorage.setItem('nlpc_authenticated', 'true');
+                        document.getElementById('loginOverlay').style.display = 'none';
+                        document.body.style.overflow = '';
+                        loadMembers();
+                    } else {
+                        showAlert(alertEl, 'Incorrect password', 'error');
+                    }
+                } else {
+                    showAlert(alertEl, 'Incorrect password', 'error');
+                }
+            } catch (error) {
+                console.error('Error verifying password:', error);
+                showAlert(alertEl, 'Error connecting to server', 'error');
+            }
+        }
+
         // Event listeners for search
         document.addEventListener('DOMContentLoaded', () => {
-            loadMembers();
-            
+            checkAuth();
+
+            // Only load members if authenticated
+            if (sessionStorage.getItem('nlpc_authenticated') === 'true') {
+                loadMembers();
+            }
+
             document.getElementById('memberSearch')?.addEventListener('input', renderMembersList);
             document.getElementById('directorySearch')?.addEventListener('input', showMembersTable);
         });
 
+        // Close modal when clicking outside
+        document.getElementById('addMemberModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeAddMemberModal();
+        });
+
         // Initial load
         window.addEventListener('load', () => {
-            loadMembers();
+            checkAuth();
+            if (sessionStorage.getItem('nlpc_authenticated') === 'true') {
+                loadMembers();
+            }
         });
     </script>
 </body>
