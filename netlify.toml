@@ -7,8 +7,36 @@
 
 # Environment variables (set in Netlify dashboard)
 # DATABASE_URL=postgresql://...
+# VIMEO_ACCESS_TOKEN=...
+# VIMEO_VIDEO_ID=...
 
-# Redirects for SPA
+# Scheduled function for automatic password rotation
+# Runs every Sunday at 8:00 AM UTC
+[functions."scheduled-password-rotation"]
+  schedule = "0 8 * * 0"
+
+# Redirects - serve specific HTML pages first
+[[redirects]]
+  from = "/absent"
+  to = "/absent.html"
+  status = 200
+
+[[redirects]]
+  from = "/absentee-admin"
+  to = "/absentee-admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/livestream"
+  to = "/absent.html"
+  status = 200
+
+[[redirects]]
+  from = "/checkin"
+  to = "/checkin.html"
+  status = 200
+
+# Catch-all redirect for main app
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -22,4 +50,4 @@
   [headers.values]
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
-    Access-Control-Allow-Methods = "GET, POST, DELETE, OPTIONS"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
