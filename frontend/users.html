@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - NLPC Admin</title>
+    <style>
+        :root {
+            --color-primary: #02a2bc;
+            --color-primary-hover: #0a7a92;
+            --color-success: #28a745;
+            --color-error: #dc3545;
+            --color-warning: #ffc107;
+            --color-text: #333;
+            --color-text-secondary: #666;
+            --color-bg: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%);
+            --color-surface: #ffffff;
+            --color-border: #e0e0e0;
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            font-family: var(--font-family);
+            background: var(--color-bg);
+            color: var(--color-text);
+            min-height: 100vh;
+        }
+
+        body { padding: 20px; max-width: 900px; margin: 0 auto; }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 { color: white; font-size: 24px; }
+        .header p { color: rgba(255, 255, 255, 0.8); font-size: 14px; margin-top: 4px; }
+
+        .card {
+            background: var(--color-surface);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 { margin-bottom: 20px; font-size: 18px; }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-family);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary { background: var(--color-primary); color: white; }
+        .btn-primary:hover { background: var(--color-primary-hover); }
+        .btn-success { background: var(--color-success); color: white; }
+        .btn-danger { background: var(--color-error); color: white; }
+        .btn-secondary { background: white; color: var(--color-primary); border: 1px solid var(--color-primary); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        .form-group { margin-bottom: 16px; }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--color-text);
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-family: var(--font-family);
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(2, 162, 188, 0.15);
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        th {
+            background: rgba(2, 162, 188, 0.1);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-size: 14px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-admin { background: rgba(220, 53, 69, 0.15); color: #c82333; }
+        .badge-user { background: rgba(2, 162, 188, 0.15); color: #0a7a92; }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-success { background: rgba(40, 167, 69, 0.15); color: #1e7e34; border: 1px solid rgba(40, 167, 69, 0.3); }
+        .alert-error { background: rgba(220, 53, 69, 0.15); color: #c82333; border: 1px solid rgba(220, 53, 69, 0.3); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        .back-link {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 450px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Login Overlay */
+        .login-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--color-bg);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .login-card h2 { margin-bottom: 8px; }
+        .login-card p { color: #666; margin-bottom: 24px; }
+    </style>
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <h2>User Management</h2>
+            <p>Please log in to continue</p>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <input type="text" id="loginUsername" placeholder="Username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+                </div>
+                <div id="loginAlert"></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <a href="/" class="back-link">← Back to Dashboard</a>
+
+    <div class="header">
+        <div>
+            <h1>User Management</h1>
+            <p>Manage admin access to the system</p>
+        </div>
+        <button class="btn btn-success" onclick="openAddUserModal()">+ Add User</button>
+    </div>
+
+    <div class="card">
+        <h2>Current Users</h2>
+        <div id="alertContainer"></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Display Name</th>
+                    <th>Role</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                <tr><td colspan="5" style="text-align: center; padding: 40px; color: #666;">Loading users...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Change Your Password</h2>
+        <form onsubmit="changeOwnPassword(event)">
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" required minlength="6">
+                </div>
+            </div>
+            <div id="passwordAlert"></div>
+            <button type="submit" class="btn btn-primary">Change Password</button>
+        </form>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal" id="addUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New User</h3>
+                <button class="modal-close" onclick="closeAddUserModal()">&times;</button>
+            </div>
+            <form onsubmit="addUser(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="newUsername" required minlength="3" placeholder="At least 3 characters">
+                </div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" id="newDisplayName" placeholder="Optional">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="newUserPassword" required minlength="6" placeholder="At least 6 characters">
+                </div>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="newUserIsAdmin">
+                        <label for="newUserIsAdmin" style="margin: 0;">Admin privileges</label>
+                    </div>
+                </div>
+                <div id="addUserAlert"></div>
+                <div class="actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddUserModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/.netlify/functions';
+        let currentUser = null;
+
+        // Check auth on load
+        function checkAuth() {
+            const isAuthenticated = sessionStorage.getItem('nlpc_authenticated') === 'true';
+            const loginOverlay = document.getElementById('loginOverlay');
+
+            if (!isAuthenticated) {
+                loginOverlay.style.display = 'flex';
+            } else {
+                loginOverlay.style.display = 'none';
+                currentUser = JSON.parse(sessionStorage.getItem('nlpc_user') || '{}');
+                loadUsers();
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const alertEl = document.getElementById('loginAlert');
+
+            try {
+                const response = await fetch(`${API_BASE}/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'login', username, password })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    sessionStorage.setItem('nlpc_authenticated', 'true');
+                    sessionStorage.setItem('nlpc_user', JSON.stringify(result.user));
+                    currentUser = result.user;
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    loadUsers();
+                } else {
+                    alertEl.innerHTML = '<div class="alert alert-error">' + (result.error || 'Invalid credentials') + '</div>';
+                }
+            } catch (error) {
+                alertEl.innerHTML = '<div class="alert alert-error">Error connecting to server</div>';
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/users`);
+                const data = await response.json();
+
+                const tbody = document.getElementById('usersTableBody');
+
+                if (!data.users || data.users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #666;">No users found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.users.map(user => `
+                    <tr>
+                        <td><strong>${user.username}</strong></td>
+                        <td>${user.display_name || '—'}</td>
+                        <td><span class="badge ${user.is_admin ? 'badge-admin' : 'badge-user'}">${user.is_admin ? 'Admin' : 'User'}</span></td>
+                        <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                        <td>
+                            ${user.id !== currentUser?.id ? `<button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}', '${user.username}')">Delete</button>` : '<span style="color: #666; font-size: 12px;">Current user</span>'}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showAlert('alertContainer', 'Error loading users', 'error');
+            }
+        }
+
+        function openAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'flex';
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newDisplayName').value = '';
+            document.getElementById('newUserPassword').value = '';
+            document.getElementById('newUserIsAdmin').checked = false;
+            document.getElementById('addUserAlert').innerHTML = '';
+        }
+
+        function closeAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'none';
+        }
+
+        async function addUser(event) {
+            event.preventDefault();
+            const alertEl = document.getElementById('addUserAlert');
+
+            const userData = {
+                username: document.getElementById('newUsername').value,
+                displayName: document.getElementById('newDisplayName').value,
+                password: document.getElementById('newUserPassword').value,
+                isAdmin: document.getElementById('newUserIsAdmin').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('addUserAlert', 'User created successfully!', 'success');
+                    setTimeout(() => {
+                        closeAddUserModal();
+                        loadUsers();
+                    }, 1000);
+                } else {
+                    showAlert('addUserAlert', result.error || 'Failed to create user', 'error');
+                }
+            } catch (error) {
+                showAlert('addUserAlert', 'Error creating user', 'error');
+            }
+        }
+
+        async function deleteUser(userId, username) {
+            if (!confirm(`Are you sure you want to delete user "${username}"? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/users`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('alertContainer', 'User deleted successfully', 'success');
+                    loadUsers();
+                } else {
+                    showAlert('alertContainer', result.error || 'Failed to delete user', 'error');
+                }
+            } catch (error) {
+                showAlert('alertContainer', 'Error deleting user', 'error');
+            }
+        }
+
+        async function changeOwnPassword(event) {
+            event.preventDefault();
+            const alertEl = document.getElementById('passwordAlert');
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+
+            if (!currentUser?.id) {
+                showAlert('passwordAlert', 'User session not found. Please log in again.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/users`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.id,
+                        currentPassword,
+                        newPassword
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('passwordAlert', 'Password changed successfully!', 'success');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                } else {
+                    showAlert('passwordAlert', result.error || 'Failed to change password', 'error');
+                }
+            } catch (error) {
+                showAlert('passwordAlert', 'Error changing password', 'error');
+            }
+        }
+
+        function showAlert(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            if (type === 'success') {
+                setTimeout(() => { container.innerHTML = ''; }, 3000);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('addUserModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAddUserModal();
+        });
+
+        // Initialize
+        window.addEventListener('load', checkAuth);
+    </script>
+</body>
+</html>

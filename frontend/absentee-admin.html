@@ -573,10 +573,13 @@
         <div class="login-card">
             <img src="/logo.png" alt="NLPC Logo">
             <h2>Absentee Management</h2>
-            <p>Please enter the admin password to continue</p>
-            <form onsubmit="verifyPassword(event)">
+            <p>Please log in to continue</p>
+            <form onsubmit="handleLogin(event)">
                 <div class="form-group">
-                    <input type="password" id="loginPassword" placeholder="Enter password" required style="text-align: center; font-size: 16px;">
+                    <input type="text" id="loginUsername" placeholder="Username" required style="text-align: center; font-size: 16px;" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPassword" placeholder="Password" required style="text-align: center; font-size: 16px;" autocomplete="current-password">
                 </div>
                 <div id="loginAlert"></div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Login</button>
@@ -1285,33 +1288,32 @@
             }
         }
 
-        async function verifyPassword(event) {
+        async function handleLogin(event) {
             event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
 
             try {
-                const response = await fetch(`${API_BASE}/verify-password`, {
+                const response = await fetch(`${API_BASE}/auth`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password })
+                    body: JSON.stringify({ action: 'login', username, password })
                 });
 
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        sessionStorage.setItem('nlpc_authenticated', 'true');
-                        document.getElementById('loginOverlay').style.display = 'none';
-                        document.body.style.overflow = '';
-                        initDates();
-                        loadDashboard();
-                    } else {
-                        showAlert('loginAlert', 'Incorrect password', 'error');
-                    }
+                const result = await response.json();
+
+                if (result.success) {
+                    sessionStorage.setItem('nlpc_authenticated', 'true');
+                    sessionStorage.setItem('nlpc_user', JSON.stringify(result.user));
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.body.style.overflow = '';
+                    initDates();
+                    loadDashboard();
                 } else {
-                    showAlert('loginAlert', 'Incorrect password', 'error');
+                    showAlert('loginAlert', result.error || 'Invalid username or password', 'error');
                 }
             } catch (error) {
-                console.error('Error verifying password:', error);
+                console.error('Error logging in:', error);
                 showAlert('loginAlert', 'Error connecting to server', 'error');
             }
         }

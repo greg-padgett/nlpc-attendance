@@ -680,14 +680,43 @@
         <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
             <img src="/logo.png" alt="NLPC Logo" style="height: 80px; width: auto; margin-bottom: 20px; border-radius: 8px; padding: 12px 20px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%);">
             <h2 style="margin: 0 0 8px 0; color: #333;">Church Attendance Tracker</h2>
-            <p style="color: #666; margin-bottom: 24px;">Please enter the password to continue</p>
-            <form onsubmit="verifyPassword(event)">
-                <div class="form-group">
-                    <input type="password" id="loginPassword" placeholder="Enter password" required style="text-align: center; font-size: 16px;" />
-                </div>
-                <div id="loginAlert" style="margin-bottom: 16px;"></div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Login</button>
-            </form>
+
+            <!-- Login Form -->
+            <div id="loginForm">
+                <p style="color: #666; margin-bottom: 24px;">Please log in to continue</p>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <input type="text" id="loginUsername" placeholder="Username" required style="text-align: center; font-size: 16px;" autocomplete="username" />
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="loginPassword" placeholder="Password" required style="text-align: center; font-size: 16px;" autocomplete="current-password" />
+                    </div>
+                    <div id="loginAlert" style="margin-bottom: 16px;"></div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Login</button>
+                </form>
+            </div>
+
+            <!-- Setup Form (shown when no users exist) -->
+            <div id="setupForm" style="display: none;">
+                <p style="color: #666; margin-bottom: 16px;">Create your first admin account</p>
+                <form onsubmit="handleSetup(event)">
+                    <div class="form-group">
+                        <input type="password" id="setupAppPassword" placeholder="Enter APP_PASSWORD to verify" required style="text-align: center; font-size: 16px;" />
+                    </div>
+                    <hr style="margin: 16px 0; border: none; border-top: 1px solid #eee;">
+                    <div class="form-group">
+                        <input type="text" id="setupUsername" placeholder="Choose username" required style="text-align: center; font-size: 16px;" minlength="3" />
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="setupDisplayName" placeholder="Display name (optional)" style="text-align: center; font-size: 16px;" />
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="setupPassword" placeholder="Choose password (min 6 chars)" required style="text-align: center; font-size: 16px;" minlength="6" />
+                    </div>
+                    <div id="setupAlert" style="margin-bottom: 16px;"></div>
+                    <button type="submit" class="btn btn-success" style="width: 100%; padding: 12px;">Create Admin Account</button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -1394,46 +1423,107 @@
         }
 
         // Authentication Functions
-        function checkAuth() {
+        async function checkAuth() {
             const isAuthenticated = sessionStorage.getItem('nlpc_authenticated') === 'true';
             const loginOverlay = document.getElementById('loginOverlay');
 
             if (!isAuthenticated) {
                 loginOverlay.style.display = 'flex';
                 document.body.style.overflow = 'hidden';
+
+                // Check if setup is needed
+                try {
+                    const response = await fetch(`${API_BASE}/auth`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'check' })
+                    });
+                    const result = await response.json();
+
+                    if (result.needsSetup) {
+                        document.getElementById('loginForm').style.display = 'none';
+                        document.getElementById('setupForm').style.display = 'block';
+                    } else {
+                        document.getElementById('loginForm').style.display = 'block';
+                        document.getElementById('setupForm').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error checking auth status:', error);
+                }
             } else {
                 loginOverlay.style.display = 'none';
                 document.body.style.overflow = '';
             }
         }
 
-        async function verifyPassword(event) {
+        async function handleLogin(event) {
             event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
             const alertEl = document.getElementById('loginAlert');
 
             try {
-                const response = await fetch(`${API_BASE}/verify-password`, {
+                const response = await fetch(`${API_BASE}/auth`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password })
+                    body: JSON.stringify({ action: 'login', username, password })
                 });
 
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        sessionStorage.setItem('nlpc_authenticated', 'true');
-                        document.getElementById('loginOverlay').style.display = 'none';
-                        document.body.style.overflow = '';
-                        loadMembers();
-                    } else {
-                        showAlert(alertEl, 'Incorrect password', 'error');
-                    }
+                const result = await response.json();
+
+                if (result.success) {
+                    sessionStorage.setItem('nlpc_authenticated', 'true');
+                    sessionStorage.setItem('nlpc_user', JSON.stringify(result.user));
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.body.style.overflow = '';
+                    loadMembers();
+                } else if (result.needsSetup) {
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('setupForm').style.display = 'block';
                 } else {
-                    showAlert(alertEl, 'Incorrect password', 'error');
+                    showAlert(alertEl, result.error || 'Invalid username or password', 'error');
                 }
             } catch (error) {
-                console.error('Error verifying password:', error);
+                console.error('Error logging in:', error);
+                showAlert(alertEl, 'Error connecting to server', 'error');
+            }
+        }
+
+        async function handleSetup(event) {
+            event.preventDefault();
+            const appPassword = document.getElementById('setupAppPassword').value;
+            const username = document.getElementById('setupUsername').value;
+            const displayName = document.getElementById('setupDisplayName').value;
+            const newPassword = document.getElementById('setupPassword').value;
+            const alertEl = document.getElementById('setupAlert');
+
+            try {
+                const response = await fetch(`${API_BASE}/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'setup',
+                        password: appPassword,
+                        username,
+                        displayName,
+                        newPassword
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert(alertEl, 'Admin account created! Please log in.', 'success');
+                    setTimeout(() => {
+                        document.getElementById('setupForm').style.display = 'none';
+                        document.getElementById('loginForm').style.display = 'block';
+                        document.getElementById('loginUsername').value = username;
+                    }, 1500);
+                } else {
+                    showAlert(alertEl, result.error || 'Setup failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error during setup:', error);
                 showAlert(alertEl, 'Error connecting to server', 'error');
             }
         }
