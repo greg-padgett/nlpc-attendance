@@ -17,6 +17,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "pg": "^8.11.3",
     "twilio": "^4.23.0"
   },
