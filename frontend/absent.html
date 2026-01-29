@@ -317,10 +317,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="phone" class="required">Phone Number</label>
-                    <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567" required autocomplete="tel">
-                    <small style="color: var(--color-text-secondary); font-size: 12px; margin-top: 4px; display: block;">
-                        Enter the phone number on file with the church
+                    <label for="phone" class="required">Phone Number (10 digits)</label>
+                    <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567" required autocomplete="tel" maxlength="14">
+                    <small id="phoneHelp" style="color: var(--color-text-secondary); font-size: 12px; margin-top: 4px; display: block;">
+                        Enter your 10-digit phone number without country code (no leading 1)
+                    </small>
+                    <small id="phoneError" style="color: var(--color-error); font-size: 12px; margin-top: 4px; display: none;">
+                        Please enter exactly 10 digits (e.g., 555-123-4567)
                     </small>
                 </div>
 
@@ -406,9 +409,19 @@
             document.getElementById('alertContainer').innerHTML = '';
         }
 
-        // Format phone number as user types
+        // Format phone number as user types (10 digits only, strip leading 1)
         function formatPhoneNumber(input) {
             let value = input.value.replace(/\D/g, '');
+
+            // Strip leading 1 if user enters it
+            if (value.length > 10 && value.startsWith('1')) {
+                value = value.slice(1);
+            }
+
+            // Limit to 10 digits
+            value = value.slice(0, 10);
+
+            // Format as (XXX) XXX-XXXX
             if (value.length > 0) {
                 if (value.length <= 3) {
                     value = `(${value}`;
@@ -419,12 +432,48 @@
                 }
             }
             input.value = value;
+
+            // Update validation display
+            validatePhone();
+        }
+
+        // Validate phone number is exactly 10 digits
+        function validatePhone() {
+            const phoneInput = document.getElementById('phone');
+            const phoneError = document.getElementById('phoneError');
+            const phoneHelp = document.getElementById('phoneHelp');
+            const digits = phoneInput.value.replace(/\D/g, '');
+
+            if (digits.length === 0) {
+                phoneError.style.display = 'none';
+                phoneHelp.style.display = 'block';
+                phoneInput.style.borderColor = '';
+                return true; // Empty is okay (required attr handles it)
+            } else if (digits.length === 10) {
+                phoneError.style.display = 'none';
+                phoneHelp.style.display = 'block';
+                phoneInput.style.borderColor = 'var(--color-success)';
+                return true;
+            } else {
+                phoneError.style.display = 'block';
+                phoneHelp.style.display = 'none';
+                phoneInput.style.borderColor = 'var(--color-error)';
+                return false;
+            }
         }
 
         // Submit the absence form
         async function submitAbsence(event) {
             event.preventDefault();
             clearAlert();
+
+            // Validate phone number first
+            const phoneDigits = document.getElementById('phone').value.replace(/\D/g, '');
+            if (phoneDigits.length !== 10) {
+                showAlert('Please enter a valid 10-digit phone number (without country code).', 'error');
+                validatePhone();
+                return;
+            }
 
             const submitBtn = document.getElementById('submitBtn');
             const originalText = submitBtn.innerHTML;
@@ -434,7 +483,7 @@
 
             const formData = {
                 name: document.getElementById('name').value.trim(),
-                phone: document.getElementById('phone').value.replace(/\D/g, ''),
+                phone: phoneDigits,
                 reason: document.getElementById('reason').value,
                 prayerRequest: document.getElementById('prayerRequest').value.trim() || null,
                 serviceDate: document.getElementById('serviceDate').value || null
