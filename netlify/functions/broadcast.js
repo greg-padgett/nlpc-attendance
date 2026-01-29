@@ -38,14 +38,17 @@ const respond = (statusCode, body) => ({
 });
 
 // Send email via MailerSend
-const sendEmail = async (to, subject, html) => {
+const sendEmail = async (to, subject, html, fromEmail = 'church@nlpc.net') => {
   if (!MAILERSEND_API_KEY) {
     throw new Error('MAILERSEND_API_KEY not configured');
   }
 
+  // Validate fromEmail is from nlpc.net domain
+  const validFromEmail = fromEmail && fromEmail.endsWith('@nlpc.net') ? fromEmail : 'church@nlpc.net';
+
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify({
-      from: { email: 'church@nlpc.net', name: 'New Life Pentecostal Church' },
+      from: { email: validFromEmail, name: 'New Life Pentecostal Church' },
       to: [{ email: to }],
       subject: subject,
       html: html
@@ -109,7 +112,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { subject, message, method, memberIds } = JSON.parse(event.body);
+    const { fromEmail, subject, message, method, memberIds } = JSON.parse(event.body);
 
     if (!message || !method) {
       return respond(400, { error: 'Missing required fields: message, method' });
@@ -167,7 +170,7 @@ exports.handler = async (event) => {
               </div>
             </div>
           `;
-          await sendEmail(member.email, emailSubject, html);
+          await sendEmail(member.email, emailSubject, html, fromEmail);
           results.emailSent++;
           console.log(`Email sent to ${member.email}`);
         } catch (e) {

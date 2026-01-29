@@ -599,6 +599,13 @@
             </div>
         </div>
         <div class="header-actions">
+            <div id="autoRefreshIndicator" style="display: flex; align-items: center; gap: 8px; color: white; font-size: 12px; margin-right: 8px;">
+                <span id="refreshStatus">Auto-refresh: ON</span>
+                <label class="toggle-switch" style="transform: scale(0.75);">
+                    <input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
             <a href="/absent" class="btn btn-warning" target="_blank">Public Check-In Form</a>
             <a href="/" class="btn btn-secondary">Main App</a>
         </div>
@@ -613,6 +620,64 @@
 
     <!-- Dashboard View -->
     <div id="dashboard" class="view active">
+        <!-- Manual Absence Entry Card -->
+        <div class="card" style="background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%); color: white; margin-bottom: 20px;">
+            <div class="card-header">
+                <h3 class="card-title" style="color: white;">📝 Record Absence Manually</h3>
+                <small style="color: rgba(255,255,255,0.8);">For phone calls or direct messages to pastor</small>
+            </div>
+            <div class="grid-2" style="margin-top: 12px;">
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.9);">Select Member *</label>
+                    <select id="manualAbsenceMember" style="background: white; color: #333;" required>
+                        <option value="">-- Select a member --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.9);">Reason *</label>
+                    <select id="manualAbsenceReason" style="background: white; color: #333;" required>
+                        <option value="sick">Sick / Prayer Request</option>
+                        <option value="vacation">Vacation</option>
+                        <option value="business">Business Travel</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid-3" style="margin-top: 8px;">
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.9);">Service Date *</label>
+                    <input type="date" id="manualAbsenceDate" style="background: white; color: #333;" required>
+                </div>
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.9);">Service Type</label>
+                    <select id="manualAbsenceServiceType" style="background: white; color: #333;">
+                        <option value="">-- Optional --</option>
+                        <option value="Sunday AM - EAC">Sunday AM - EAC</option>
+                        <option value="Sunday School">Sunday School</option>
+                        <option value="Sunday PM - NLPC">Sunday PM - NLPC</option>
+                        <option value="Wednesday PM">Wednesday PM</option>
+                        <option value="Revival Service">Revival Service</option>
+                        <option value="Prayer Meeting">Prayer Meeting</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.9);">Send Livestream Link?</label>
+                    <select id="manualAbsenceSendLink" style="background: white; color: #333;">
+                        <option value="yes">Yes, send the link now</option>
+                        <option value="no">No, just record absence</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 8px;">
+                <label style="color: rgba(255,255,255,0.9);">Prayer Request / Notes (Optional)</label>
+                <textarea id="manualAbsencePrayer" rows="2" placeholder="Add prayer request or notes..." style="background: white; color: #333; width: 100%; padding: 10px; border-radius: 6px; border: none; font-family: inherit;"></textarea>
+            </div>
+            <div id="manualAbsenceAlert" style="margin-top: 8px;"></div>
+            <div class="actions" style="margin-top: 12px;">
+                <button class="btn" style="background: var(--color-warning); color: #333;" onclick="submitManualAbsence()">Record Absence</button>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">This Week's Overview</h3>
@@ -790,6 +855,8 @@
     <script>
         const API_BASE = '/.netlify/functions';
         let currentPassword = null;
+        let autoRefreshInterval = null;
+        const AUTO_REFRESH_SECONDS = 30;
 
         // Helper: Get local date string
         function getLocalDate(date = new Date()) {
@@ -1274,6 +1341,55 @@
             }
         }
 
+        // Auto-refresh functionality
+        function startAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+
+            autoRefreshInterval = setInterval(() => {
+                const activeView = document.querySelector('.view.active');
+                if (activeView) {
+                    const viewId = activeView.id;
+                    if (viewId === 'dashboard') {
+                        loadDashboard();
+                        showRefreshPulse();
+                    } else if (viewId === 'checkins') {
+                        loadCheckins();
+                        showRefreshPulse();
+                    }
+                }
+            }, AUTO_REFRESH_SECONDS * 1000);
+
+            document.getElementById('refreshStatus').textContent = 'Auto-refresh: ON';
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+            document.getElementById('refreshStatus').textContent = 'Auto-refresh: OFF';
+        }
+
+        function toggleAutoRefresh() {
+            const toggle = document.getElementById('autoRefreshToggle');
+            if (toggle.checked) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
+        }
+
+        function showRefreshPulse() {
+            const indicator = document.getElementById('refreshStatus');
+            const originalText = indicator.textContent;
+            indicator.textContent = 'Refreshing...';
+            indicator.style.color = '#ffc107';
+            setTimeout(() => {
+                indicator.textContent = originalText;
+                indicator.style.color = 'white';
+            }, 1000);
+        }
+
         // Authentication
         function checkAuth() {
             const isAuthenticated = sessionStorage.getItem('nlpc_authenticated') === 'true';
@@ -1286,7 +1402,9 @@
                 loginOverlay.style.display = 'none';
                 document.body.style.overflow = '';
                 initDates();
+                initManualAbsenceForm();
                 loadDashboard();
+                startAutoRefresh();
             }
         }
 
@@ -1311,12 +1429,136 @@
                     document.body.style.overflow = '';
                     initDates();
                     loadDashboard();
+                    startAutoRefresh();
                 } else {
                     showAlert('loginAlert', result.error || 'Invalid username or password', 'error');
                 }
             } catch (error) {
                 console.error('Error logging in:', error);
                 showAlert('loginAlert', 'Error connecting to server', 'error');
+            }
+        }
+
+        // Initialize manual absence form
+        function initManualAbsenceForm() {
+            // Set default date to today
+            document.getElementById('manualAbsenceDate').value = getLocalDate();
+            // Load members into dropdown
+            loadMembersForDropdown();
+        }
+
+        // Load members for manual absence dropdown
+        let allMembers = [];
+
+        async function loadMembersForDropdown() {
+            try {
+                const response = await fetch(`${API_BASE}/get-members`);
+                if (response.ok) {
+                    const data = await response.json();
+                    allMembers = data.members || [];
+
+                    // Sort alphabetically by last name
+                    allMembers.sort((a, b) => {
+                        const nameA = `${a.last_name || ''} ${a.first_name || ''}`.toLowerCase();
+                        const nameB = `${b.last_name || ''} ${b.first_name || ''}`.toLowerCase();
+                        return nameA.localeCompare(nameB);
+                    });
+
+                    const select = document.getElementById('manualAbsenceMember');
+                    select.innerHTML = '<option value="">-- Select a member --</option>';
+
+                    allMembers.forEach(member => {
+                        const firstName = member.first_name || '';
+                        const lastName = member.last_name || '';
+                        const phone = member.phone ? ` (${member.phone})` : '';
+                        const option = document.createElement('option');
+                        option.value = member.id;
+                        option.dataset.name = `${firstName} ${lastName}`;
+                        option.dataset.phone = member.phone || '';
+                        option.textContent = `${lastName}, ${firstName}${phone}`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading members:', error);
+            }
+        }
+
+        // Submit manual absence entry
+        async function submitManualAbsence() {
+            const memberSelect = document.getElementById('manualAbsenceMember');
+            const memberId = memberSelect.value;
+            const alertEl = document.getElementById('manualAbsenceAlert');
+
+            if (!memberId) {
+                showAlert('manualAbsenceAlert', 'Please select a member', 'error');
+                return;
+            }
+
+            const selectedOption = memberSelect.options[memberSelect.selectedIndex];
+            const memberName = selectedOption.dataset.name;
+            const memberPhone = selectedOption.dataset.phone;
+
+            const reason = document.getElementById('manualAbsenceReason').value;
+            const serviceDate = document.getElementById('manualAbsenceDate').value;
+            const serviceType = document.getElementById('manualAbsenceServiceType').value;
+            const sendLink = document.getElementById('manualAbsenceSendLink').value === 'yes';
+            const prayerRequest = document.getElementById('manualAbsencePrayer').value.trim();
+
+            if (!serviceDate) {
+                showAlert('manualAbsenceAlert', 'Please select a service date', 'error');
+                return;
+            }
+
+            // Confirm before submitting
+            const confirmMsg = sendLink
+                ? `Record absence for ${memberName} and send livestream link to ${memberPhone || 'their phone'}?`
+                : `Record absence for ${memberName} (no link will be sent)?`;
+
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/manual-absence`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        memberId,
+                        memberName,
+                        memberPhone,
+                        reason,
+                        serviceDate,
+                        serviceType,
+                        sendLink,
+                        prayerRequest: prayerRequest || null
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    let msg = `Absence recorded for ${memberName}`;
+                    if (result.smsSent) {
+                        msg += ` - livestream link sent!`;
+                    } else if (sendLink && !result.smsSent) {
+                        msg += ` (note: link not sent - ${result.smsError || 'SMS issue'})`;
+                    }
+                    showAlert('manualAbsenceAlert', msg, 'success');
+
+                    // Reset form
+                    document.getElementById('manualAbsenceMember').value = '';
+                    document.getElementById('manualAbsenceReason').value = 'sick';
+                    document.getElementById('manualAbsenceServiceType').value = '';
+                    document.getElementById('manualAbsenceSendLink').value = 'yes';
+                    document.getElementById('manualAbsencePrayer').value = '';
+
+                    // Refresh dashboard
+                    setTimeout(() => loadDashboard(), 1000);
+                } else {
+                    showAlert('manualAbsenceAlert', result.error || 'Failed to record absence', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting manual absence:', error);
+                showAlert('manualAbsenceAlert', 'Error: ' + error.message, 'error');
             }
         }
 
