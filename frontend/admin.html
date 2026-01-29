@@ -473,9 +473,20 @@
     <div id="members" class="view">
         <div class="card" style="background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%); color: white; margin-bottom: 20px;">
             <h3 style="margin-bottom: 16px;">📢 Broadcast Message to All Members</h3>
-            <div class="form-group">
-                <label style="color: rgba(255,255,255,0.9);">Subject (for email)</label>
-                <input type="text" id="broadcastSubject" placeholder="Message from NLPC" style="background: white; color: #333;" />
+            <div class="grid-2">
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.9);">From Email</label>
+                    <select id="broadcastFromEmail" style="background: white; color: #333;">
+                        <option value="church@nlpc.net">church@nlpc.net</option>
+                        <option value="pastor@nlpc.net">pastor@nlpc.net</option>
+                        <option value="greg@nlpc.net">greg@nlpc.net</option>
+                        <option value="office@nlpc.net">office@nlpc.net</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="color: rgba(255,255,255,0.9);">Subject (for email)</label>
+                    <input type="text" id="broadcastSubject" placeholder="Message from NLPC" style="background: white; color: #333;" />
+                </div>
             </div>
             <div class="form-group">
                 <label style="color: rgba(255,255,255,0.9);">Message</label>
@@ -1376,6 +1387,7 @@
 
         // Send broadcast to all members
         async function sendBroadcast(method) {
+            const fromEmail = document.getElementById('broadcastFromEmail').value;
             const subject = document.getElementById('broadcastSubject').value.trim();
             const message = document.getElementById('broadcastMessage').value.trim();
 
@@ -1387,7 +1399,7 @@
             const methodLabels = { email: 'email', sms: 'SMS', both: 'email and SMS' };
             const memberCount = members.length;
 
-            if (!confirm(`Send ${methodLabels[method]} to all ${memberCount} active members?\n\nMessage: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`)) {
+            if (!confirm(`Send ${methodLabels[method]} to all ${memberCount} active members?\n\nFrom: ${fromEmail}\nMessage: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`)) {
                 return;
             }
 
@@ -1395,7 +1407,7 @@
                 const response = await fetch(`${API_BASE}/broadcast`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ subject, message, method })
+                    body: JSON.stringify({ fromEmail, subject, message, method })
                 });
 
                 if (response.ok) {
