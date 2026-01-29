@@ -108,12 +108,15 @@ exports.handler = async (event) => {
     // Determine service date (default to today)
     const effectiveDate = serviceDate || new Date().toISOString().split('T')[0];
 
+    // Normalize phone to 10 digits for storage (strip leading 1)
+    const normalizedPhone = last10Digits;
+
     // Save to database
     const insertResult = await pool.query(`
       INSERT INTO absentee_checkins (name, phone, reason, prayer_request, service_date)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id, name, phone, reason, prayer_request, service_date, created_at
-    `, [name.trim(), phone.trim(), reason, prayerRequest?.trim() || null, effectiveDate]);
+    `, [name.trim(), normalizedPhone, reason, prayerRequest?.trim() || null, effectiveDate]);
 
     const checkin = insertResult.rows[0];
 
