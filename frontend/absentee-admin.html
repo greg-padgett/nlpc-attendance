@@ -613,28 +613,28 @@
 
     <div class="nav-tabs">
         <button class="nav-tab active" onclick="switchView('dashboard')">Dashboard</button>
+        <button class="nav-tab" onclick="switchView('recordAbsence')">Record Absence</button>
         <button class="nav-tab" onclick="switchView('checkins')">All Check-Ins</button>
         <button class="nav-tab" onclick="switchView('reports')">Reports</button>
         <button class="nav-tab" onclick="switchView('password')">Live Stream Password</button>
     </div>
 
-    <!-- Dashboard View -->
-    <div id="dashboard" class="view active">
-        <!-- Manual Absence Entry Card -->
-        <div class="card" style="background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%); color: white; margin-bottom: 20px;">
+    <!-- Record Absence View -->
+    <div id="recordAbsence" class="view">
+        <div class="card" style="background: linear-gradient(135deg, #d4a017 0%, #b8860b 100%); color: white;">
             <div class="card-header">
                 <h3 class="card-title" style="color: white;">📝 Record Absence Manually</h3>
-                <small style="color: rgba(255,255,255,0.8);">For phone calls or direct messages to pastor</small>
+                <small style="color: rgba(255,255,255,0.9);">For phone calls or direct messages to pastor</small>
             </div>
-            <div class="grid-2" style="margin-top: 12px;">
+            <div class="grid-2" style="margin-top: 16px;">
                 <div class="form-group">
-                    <label style="color: rgba(255,255,255,0.9);">Select Member *</label>
+                    <label style="color: rgba(255,255,255,0.95);">Select Member *</label>
                     <select id="manualAbsenceMember" style="background: white; color: #333;" required>
                         <option value="">-- Select a member --</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label style="color: rgba(255,255,255,0.9);">Reason *</label>
+                    <label style="color: rgba(255,255,255,0.95);">Reason *</label>
                     <select id="manualAbsenceReason" style="background: white; color: #333;" required>
                         <option value="sick">Sick / Prayer Request</option>
                         <option value="vacation">Vacation</option>
@@ -643,25 +643,13 @@
                     </select>
                 </div>
             </div>
-            <div class="grid-3" style="margin-top: 8px;">
+            <div class="grid-2" style="margin-top: 8px;">
                 <div class="form-group">
-                    <label style="color: rgba(255,255,255,0.9);">Service Date *</label>
+                    <label style="color: rgba(255,255,255,0.95);">Service Date *</label>
                     <input type="date" id="manualAbsenceDate" style="background: white; color: #333;" required>
                 </div>
                 <div class="form-group">
-                    <label style="color: rgba(255,255,255,0.9);">Service Type</label>
-                    <select id="manualAbsenceServiceType" style="background: white; color: #333;">
-                        <option value="">-- Optional --</option>
-                        <option value="Sunday AM - EAC">Sunday AM - EAC</option>
-                        <option value="Sunday School">Sunday School</option>
-                        <option value="Sunday PM - NLPC">Sunday PM - NLPC</option>
-                        <option value="Wednesday PM">Wednesday PM</option>
-                        <option value="Revival Service">Revival Service</option>
-                        <option value="Prayer Meeting">Prayer Meeting</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label style="color: rgba(255,255,255,0.9);">Send Livestream Link?</label>
+                    <label style="color: rgba(255,255,255,0.95);">Send Livestream Link?</label>
                     <select id="manualAbsenceSendLink" style="background: white; color: #333;">
                         <option value="yes">Yes, send the link now</option>
                         <option value="no">No, just record absence</option>
@@ -669,15 +657,18 @@
                 </div>
             </div>
             <div class="form-group" style="margin-top: 8px;">
-                <label style="color: rgba(255,255,255,0.9);">Prayer Request / Notes (Optional)</label>
-                <textarea id="manualAbsencePrayer" rows="2" placeholder="Add prayer request or notes..." style="background: white; color: #333; width: 100%; padding: 10px; border-radius: 6px; border: none; font-family: inherit;"></textarea>
+                <label style="color: rgba(255,255,255,0.95);">Prayer Request / Notes (Optional)</label>
+                <textarea id="manualAbsencePrayer" rows="3" placeholder="Add prayer request or notes..." style="background: white; color: #333; width: 100%; padding: 10px; border-radius: 6px; border: none; font-family: inherit;"></textarea>
             </div>
             <div id="manualAbsenceAlert" style="margin-top: 8px;"></div>
-            <div class="actions" style="margin-top: 12px;">
-                <button class="btn" style="background: var(--color-warning); color: #333;" onclick="submitManualAbsence()">Record Absence</button>
+            <div class="actions" style="margin-top: 16px;">
+                <button class="btn" style="background: white; color: #333; font-weight: 600;" onclick="submitManualAbsence()">Record Absence</button>
             </div>
         </div>
+    </div>
 
+    <!-- Dashboard View -->
+    <div id="dashboard" class="view active">
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">This Week's Overview</h3>
@@ -1501,7 +1492,6 @@
 
             const reason = document.getElementById('manualAbsenceReason').value;
             const serviceDate = document.getElementById('manualAbsenceDate').value;
-            const serviceType = document.getElementById('manualAbsenceServiceType').value;
             const sendLink = document.getElementById('manualAbsenceSendLink').value === 'yes';
             const prayerRequest = document.getElementById('manualAbsencePrayer').value.trim();
 
@@ -1527,7 +1517,6 @@
                         memberPhone,
                         reason,
                         serviceDate,
-                        serviceType,
                         sendLink,
                         prayerRequest: prayerRequest || null
                     })
@@ -1547,7 +1536,6 @@
                     // Reset form
                     document.getElementById('manualAbsenceMember').value = '';
                     document.getElementById('manualAbsenceReason').value = 'sick';
-                    document.getElementById('manualAbsenceServiceType').value = '';
                     document.getElementById('manualAbsenceSendLink').value = 'yes';
                     document.getElementById('manualAbsencePrayer').value = '';
 
