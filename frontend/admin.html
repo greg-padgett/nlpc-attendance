@@ -405,6 +405,8 @@
     </style>
 </head>
 <body>
+    <a href="/" style="color: white; text-decoration: none; font-size: 14px; display: inline-block; margin-bottom: 16px;">← Back to Dashboard</a>
+
     <div class="header" style="background: var(--color-bg); padding: 20px; border-radius: 12px; margin-bottom: 24px;">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
             <div style="display: flex; align-items: center; gap: 16px;">
@@ -535,6 +537,32 @@
         </div>
 
         <div id="reportResults"></div>
+
+        <div class="card" style="margin-top: 24px; border-top: 4px solid #6f42c1;">
+            <h2>📊 Member Absence Report</h2>
+            <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 16px;">
+                View a specific member's absence history with reasons from the absentee portal.
+            </p>
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Select Member</label>
+                    <select id="absenceReportMember">
+                        <option value="">-- Select a member --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>From Date</label>
+                    <input type="date" id="absenceReportFromDate" />
+                </div>
+                <div class="form-group">
+                    <label>To Date</label>
+                    <input type="date" id="absenceReportToDate" />
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="generateMemberAbsenceReport()" style="background: #6f42c1;">Generate Absence Report</button>
+        </div>
+
+        <div id="memberAbsenceResults"></div>
     </div>
 
     <!-- Add Member Modal -->
@@ -772,7 +800,11 @@
             if (viewName === 'members') {
                 showMembersTable();
             }
-            if (viewName === 'reports') document.getElementById('reportResults').innerHTML = '';
+            if (viewName === 'reports') {
+                document.getElementById('reportResults').innerHTML = '';
+                document.getElementById('memberAbsenceResults').innerHTML = '';
+                populateMemberDropdown();
+            }
         }
 
         // Attendance Functions
@@ -1156,6 +1188,188 @@
                 `;
             } catch (error) {
                 console.error('Error generating report:', error);
+                resultsEl.innerHTML = `<div class="card"><div class="alert alert-error">❌ Error loading report: ${error.message}</div></div>`;
+            }
+        }
+
+        // Populate member dropdown for absence report
+        function populateMemberDropdown() {
+            const select = document.getElementById('absenceReportMember');
+            if (!select) return;
+
+            // Keep the first option
+            select.innerHTML = '<option value="">-- Select a member --</option>';
+
+            // Sort members alphabetically
+            const sortedMembers = [...members].sort((a, b) => {
+                const nameA = `${a.last_name} ${a.first_name}`.toLowerCase();
+                const nameB = `${b.last_name} ${b.first_name}`.toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+
+            sortedMembers.forEach(member => {
+                const firstName = member.first_name || member.firstName || '';
+                const lastName = member.last_name || member.lastName || '';
+                const option = document.createElement('option');
+                option.value = member.id;
+                option.textContent = `${lastName}, ${firstName}`;
+                select.appendChild(option);
+            });
+
+            // Set default dates for absence report (last 90 days)
+            const today = getLocalDate();
+            const ninetyDaysAgo = new Date();
+            ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+            document.getElementById('absenceReportToDate').value = today;
+            document.getElementById('absenceReportFromDate').value = getLocalDate(ninetyDaysAgo);
+        }
+
+        // Generate member absence report
+        async function generateMemberAbsenceReport() {
+            const memberId = document.getElementById('absenceReportMember').value;
+            const fromDate = document.getElementById('absenceReportFromDate').value;
+            const toDate = document.getElementById('absenceReportToDate').value;
+            const resultsEl = document.getElementById('memberAbsenceResults');
+
+            if (!memberId) {
+                resultsEl.innerHTML = '<div class="card"><div class="alert alert-error">Please select a member</div></div>';
+                return;
+            }
+
+            if (!fromDate || !toDate) {
+                resultsEl.innerHTML = '<div class="card"><div class="alert alert-error">Please select both dates</div></div>';
+                return;
+            }
+
+            resultsEl.innerHTML = '<div style="text-align: center; padding: 20px;">⏳ Loading absence report...</div>';
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/member-absence-report?memberId=${memberId}&fromDate=${fromDate}&toDate=${toDate}`
+                );
+
+                if (!response.ok) {
+                    throw new Error('Failed to load absence report');
+                }
+
+                const data = await response.json();
+
+                if (data.summary.totalAbsences === 0) {
+                    resultsEl.innerHTML = `
+                        <div class="card">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🌟</div>
+                                <p><strong>${data.member.name}</strong> had perfect attendance during this period!</p>
+                                <p style="font-size: 12px; color: var(--color-text-secondary); margin-top: 8px;">
+                                    Attended ${data.summary.totalAttended} of ${data.summary.totalServicesInPeriod} services
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Build service type tallies table
+                const talliesHtml = Object.entries(data.serviceTypeTallies).map(([type, tally]) => `
+                    <tr>
+                        <td>${type}</td>
+                        <td><strong>${tally.total}</strong></td>
+                        <td>${tally.withAbsenteeSubmission}</td>
+                        <td>${tally.total - tally.withAbsenteeSubmission}</td>
+                    </tr>
+                `).join('');
+
+                // Build detailed absences list
+                const absencesHtml = data.absences.map(absence => {
+                    const hasSubmission = absence.absenteeSubmission;
+                    const statusColor = hasSubmission ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)';
+                    const statusBorder = hasSubmission ? '#28a745' : '#dc3545';
+
+                    return `
+                        <div style="margin-bottom: 12px; padding: 12px; background: ${statusColor}; border-radius: 6px; border-left: 4px solid ${statusBorder};">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <div style="font-weight: 600;">📅 ${absence.date} - ${absence.serviceType}</div>
+                                    ${hasSubmission ? `
+                                        <div style="font-size: 13px; margin-top: 8px; color: var(--color-text-secondary);">
+                                            <div>✓ <strong>Reported via Absentee Portal</strong></div>
+                                            <div style="margin-left: 16px;">
+                                                <div>Reason: <strong>${absence.absenteeSubmission.reasonLabel}</strong></div>
+                                                ${absence.absenteeSubmission.prayerRequest ? `<div style="font-style: italic; margin-top: 4px;">Prayer: "${absence.absenteeSubmission.prayerRequest}"</div>` : ''}
+                                                <div style="margin-top: 4px;">
+                                                    ${absence.absenteeSubmission.livestreamSent
+                                                        ? '🎧 Livestream link sent'
+                                                        : '⚠️ Livestream link NOT sent'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ` : `
+                                        <div style="font-size: 13px; margin-top: 4px; color: #dc3545;">
+                                            ✗ No absentee submission recorded
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                resultsEl.innerHTML = `
+                    <div class="card">
+                        <h3>📊 Absence Report: ${data.member.name}</h3>
+                        <p style="color: var(--color-text-secondary); font-size: 14px; margin-bottom: 16px;">
+                            ${data.dateRange.from} to ${data.dateRange.to}
+                        </p>
+                        <div class="attendance-summary">
+                            <div class="summary-item">
+                                <div class="summary-label">Total Services</div>
+                                <div class="summary-value">${data.summary.totalServicesInPeriod}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Attended</div>
+                                <div class="summary-value" style="color: var(--color-success);">${data.summary.totalAttended}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Absent</div>
+                                <div class="summary-value" style="color: var(--color-error);">${data.summary.totalAbsences}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Attendance Rate</div>
+                                <div class="summary-value">${data.summary.attendanceRate}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Absences by Service Type</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Service Type</th>
+                                    <th>Total Absences</th>
+                                    <th>With Absentee Submission</th>
+                                    <th>Unexcused</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${talliesHtml}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h3>Detailed Absence History</h3>
+                        <p style="color: var(--color-text-secondary); font-size: 13px; margin-bottom: 16px;">
+                            <span style="display: inline-block; width: 12px; height: 12px; background: #28a745; border-radius: 2px; margin-right: 4px;"></span> Reported absence
+                            &nbsp;&nbsp;
+                            <span style="display: inline-block; width: 12px; height: 12px; background: #dc3545; border-radius: 2px; margin-right: 4px;"></span> Unreported absence
+                        </p>
+                        ${absencesHtml}
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Error generating absence report:', error);
                 resultsEl.innerHTML = `<div class="card"><div class="alert alert-error">❌ Error loading report: ${error.message}</div></div>`;
             }
         }
