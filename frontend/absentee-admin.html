@@ -671,35 +671,25 @@
     <div id="dashboard" class="view active">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">This Week's Overview</h3>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <input type="date" id="dashboardFromDate" style="width: auto;">
-                    <span>to</span>
-                    <input type="date" id="dashboardToDate" style="width: auto;">
-                    <button class="btn btn-sm btn-primary" onclick="loadDashboard()">Update</button>
-                </div>
+                <h3 class="card-title">Today's Check-Ins</h3>
+                <span id="dashboardDate" style="color: var(--color-text-secondary); font-size: 14px;"></span>
             </div>
 
             <div id="summaryCards" class="grid-4" style="margin-bottom: 24px;">
                 <!-- Summary cards will be loaded here -->
             </div>
+
+            <div id="todayCheckins">
+                <!-- Today's check-ins will be loaded here -->
+            </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="prayerRequestsCard" style="display: none;">
             <div class="card-header">
-                <h3 class="card-title">Prayer Requests</h3>
+                <h3 class="card-title">Today's Prayer Requests</h3>
             </div>
             <div id="prayerRequests">
                 <!-- Prayer requests will be loaded here -->
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Recent Check-Ins by Reason</h3>
-            </div>
-            <div id="groupedCheckins">
-                <!-- Grouped check-ins will be loaded here -->
             </div>
         </div>
     </div>
@@ -873,9 +863,11 @@
 
         // Initialize date fields
         function initDates() {
+            const today = getLocalDate();
             const week = getWeekDates();
-            document.getElementById('dashboardFromDate').value = week.from;
-            document.getElementById('dashboardToDate').value = week.to;
+            // Dashboard shows today only (date displayed in header)
+            document.getElementById('dashboardDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            // All Check-Ins defaults to this week
             document.getElementById('filterFromDate').value = week.from;
             document.getElementById('filterToDate').value = week.to;
             document.getElementById('reportFromDate').value = week.from;
@@ -917,13 +909,12 @@
             `;
         }
 
-        // Load Dashboard
+        // Load Dashboard (today only)
         async function loadDashboard() {
-            const fromDate = document.getElementById('dashboardFromDate').value;
-            const toDate = document.getElementById('dashboardToDate').value;
+            const today = getLocalDate();
 
             try {
-                const response = await fetch(`${API_BASE}/absentee-dashboard?fromDate=${fromDate}&toDate=${toDate}`);
+                const response = await fetch(`${API_BASE}/absentee-dashboard?fromDate=${today}&toDate=${today}`);
                 const data = await response.json();
 
                 if (data.success) {
@@ -931,7 +922,7 @@
                     document.getElementById('summaryCards').innerHTML = `
                         <div class="summary-card">
                             <div class="summary-value">${data.summary.total}</div>
-                            <div class="summary-label">Total Check-Ins</div>
+                            <div class="summary-label">Total Today</div>
                         </div>
                         <div class="summary-card sick">
                             <div class="summary-value">${data.summary.sick}</div>
@@ -947,43 +938,50 @@
                         </div>
                     `;
 
-                    // Prayer requests
+                    // Today's check-ins list
+                    if (data.checkins.length > 0) {
+                        document.getElementById('todayCheckins').innerHTML = `
+                            <table style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Phone</th>
+                                        <th>Reason</th>
+                                        <th>Link Sent</th>
+                                        <th>Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.checkins.map(c => `
+                                        <tr>
+                                            <td><strong>${c.name}</strong></td>
+                                            <td><a href="tel:${c.phone}" style="color: var(--color-primary);">${c.phone || '—'}</a></td>
+                                            <td><span class="reason-badge ${getReasonClass(c.reason)}">${formatReason(c.reason)}</span></td>
+                                            <td>${c.livestream_sent ? '<span class="status-badge status-sent">Sent</span>' : '<span class="status-badge status-pending">Pending</span>'}</td>
+                                            <td style="white-space: nowrap;">${new Date(c.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        `;
+                    } else {
+                        document.getElementById('todayCheckins').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No check-ins yet today</p></div>';
+                    }
+
+                    // Prayer requests (show card only if there are any)
                     const prayerItems = data.checkins.filter(c => c.prayer_request);
+                    const prayerCard = document.getElementById('prayerRequestsCard');
                     if (prayerItems.length > 0) {
+                        prayerCard.style.display = 'block';
                         document.getElementById('prayerRequests').innerHTML = prayerItems.map(p => `
                             <div style="background: #fff3cd; padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 4px solid #ffc107;">
                                 <div style="font-weight: 600; margin-bottom: 4px;">${p.name}</div>
                                 <div style="font-size: 14px; color: #666;">${p.prayer_request}</div>
-                                <div style="font-size: 12px; color: #999; margin-top: 4px;">${new Date(p.created_at).toLocaleDateString()}</div>
                             </div>
                         `).join('');
                     } else {
-                        document.getElementById('prayerRequests').innerHTML = '<p style="color: #999;">No prayer requests this week</p>';
+                        prayerCard.style.display = 'none';
                     }
-
-                    // Grouped check-ins
-                    let groupedHtml = '';
-                    for (const [reason, items] of Object.entries(data.grouped)) {
-                        if (items.length > 0) {
-                            groupedHtml += `
-                                <div style="margin-bottom: 16px;">
-                                    <h4 style="margin-bottom: 8px;">
-                                        <span class="reason-badge ${getReasonClass(reason)}">${formatReason(reason)}</span>
-                                        <span style="color: #999; font-weight: normal;">(${items.length})</span>
-                                    </h4>
-                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                        ${items.map(i => `
-                                            <span style="background: #f8f9fa; padding: 6px 12px; border-radius: 4px; font-size: 13px;">
-                                                ${i.name}
-                                                ${i.livestream_sent ? '<span style="color: #28a745;">✓</span>' : ''}
-                                            </span>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    }
-                    document.getElementById('groupedCheckins').innerHTML = groupedHtml || '<p style="color: #999;">No check-ins this week</p>';
                 }
             } catch (error) {
                 console.error('Error loading dashboard:', error);
