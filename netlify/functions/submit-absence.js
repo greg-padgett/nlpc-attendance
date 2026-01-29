@@ -84,14 +84,16 @@ exports.handler = async (event) => {
     }
 
     // Validate phone number against members database
+    // Use last 10 digits for matching to handle country code variations
     const cleanedPhone = phone.replace(/\D/g, '');
+    const last10Digits = cleanedPhone.slice(-10);
+
     const memberResult = await pool.query(`
       SELECT id, first_name, last_name, phone
       FROM members
-      WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone, '(', ''), ')', ''), '-', ''), ' ', '') = $1
-         OR REPLACE(REPLACE(REPLACE(REPLACE(phone, '(', ''), ')', ''), '-', ''), ' ', '') = $2
+      WHERE RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 10) = $1
       LIMIT 1
-    `, [cleanedPhone, '1' + cleanedPhone]);
+    `, [last10Digits]);
 
     if (memberResult.rows.length === 0) {
       return respond(403, {

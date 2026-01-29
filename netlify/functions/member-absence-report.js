@@ -87,19 +87,20 @@ exports.handler = async (event) => {
     });
 
     // Get absentee check-ins for this member's phone number during the period
+    // Use last 10 digits for matching to handle country code variations
     const cleanedPhone = (member.phone || '').replace(/\D/g, '');
+    const last10Digits = cleanedPhone.slice(-10);
     let absenteeCheckins = [];
 
-    if (cleanedPhone) {
+    if (last10Digits.length === 10) {
       const absenteeResult = await pool.query(`
         SELECT id, name, phone, reason, prayer_request, service_date,
                livestream_sent, livestream_sent_at, created_at
         FROM absentee_checkins
-        WHERE (REPLACE(REPLACE(REPLACE(REPLACE(phone, '(', ''), ')', ''), '-', ''), ' ', '') = $1
-           OR REPLACE(REPLACE(REPLACE(REPLACE(phone, '(', ''), ')', ''), '-', ''), ' ', '') = $2)
-          AND service_date >= $3 AND service_date <= $4
+        WHERE RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 10) = $1
+          AND service_date >= $2 AND service_date <= $3
         ORDER BY service_date DESC
-      `, [cleanedPhone, '1' + cleanedPhone, fromDate, toDate]);
+      `, [last10Digits, fromDate, toDate]);
 
       absenteeCheckins = absenteeResult.rows;
     }
