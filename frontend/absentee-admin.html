@@ -1271,7 +1271,7 @@
 
         // Authentication
         function checkAuth() {
-            const isAuthenticated = sessionStorage.getItem('nlpc_absentee_authenticated') === 'true';
+            const isAuthenticated = sessionStorage.getItem('nlpc_authenticated') === 'true';
             const loginOverlay = document.getElementById('loginOverlay');
 
             if (!isAuthenticated) {
@@ -1299,7 +1299,7 @@
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
-                        sessionStorage.setItem('nlpc_absentee_authenticated', 'true');
+                        sessionStorage.setItem('nlpc_authenticated', 'true');
                         document.getElementById('loginOverlay').style.display = 'none';
                         document.body.style.overflow = '';
                         initDates();

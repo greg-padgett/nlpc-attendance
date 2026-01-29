@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Church Attendance Tracker</title>
+    <title>NLPC - Church Management Dashboard</title>
     <style>
         :root {
             --color-primary: #02a2bc;
@@ -29,1443 +29,272 @@
             font-family: var(--font-family);
             background: var(--color-bg);
             color: var(--color-text);
+            min-height: 100vh;
         }
 
         body {
             padding: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-            background: var(--color-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
         }
 
         .header {
-            margin-bottom: 30px;
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 20px;
         }
 
-        h1 {
-            font-size: 28px;
+        .logo {
+            height: 100px;
+            width: auto;
+            border-radius: 12px;
+            padding: 16px 24px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 32px;
             margin-bottom: 8px;
-            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .subtitle {
-            color: var(--color-text-secondary);
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .section-title {
+            color: white;
             font-size: 14px;
-        }
-
-        .nav-tabs {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            padding-left: 4px;
             display: flex;
+            align-items: center;
             gap: 8px;
-            margin-bottom: 24px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-            flex-wrap: wrap;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 12px 0 12px;
-            border-radius: 8px 8px 0 0;
         }
 
-        .nav-tab {
-            padding: 10px 16px;
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.3);
         }
 
-        .nav-tab.active {
-            color: var(--color-warning);
-            border-bottom-color: var(--color-warning);
-        }
-
-        .nav-tab:hover {
-            color: var(--color-warning);
-        }
-
-        .view {
-            display: none;
-        }
-
-        .view.active {
-            display: block;
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
         }
 
         .card {
             background: var(--color-surface);
-            border: 1px solid rgba(33, 128, 161, 0.15);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(33, 128, 161, 0.08);
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 6px;
+            border-radius: 16px;
+            padding: 24px;
+            text-decoration: none;
             color: var(--color-text);
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="date"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid rgba(94, 82, 64, 0.3);
-            border-radius: 6px;
-            font-family: var(--font-family);
-            font-size: 14px;
-            color: var(--color-text);
-            background: white;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(33, 128, 161, 0.1);
-        }
-
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: var(--font-family);
-        }
-
-        .btn-primary {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--color-primary-hover);
-        }
-
-        .btn-secondary {
-            background: white;
-            color: var(--color-primary);
-            border: 1px solid var(--color-primary);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(33, 128, 161, 0.05);
-        }
-
-        .btn-danger {
-            background: var(--color-error);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #A01627;
-        }
-
-        .btn-success {
-            background: var(--color-success);
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #2AA3AE;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 16px;
-        }
-
-        @media (max-width: 768px) {
-            .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .member-list {
-            list-style: none;
-        }
-
-        .member-item {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-            background: white;
-            border: 1px solid rgba(94, 82, 64, 0.1);
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-
-        .member-info {
-            flex: 1;
-        }
-
-        .member-name {
-            font-weight: 500;
-            font-size: 14px;
-            margin-bottom: 2px;
-        }
-
-        .member-contact {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-        }
-
-        .checkbox-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-
-        .attendance-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .summary-item {
-            background: white;
-            padding: 12px;
-            border-radius: 6px;
-            border-left: 4px solid var(--color-primary);
-        }
-
-        .summary-label {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-            margin-bottom: 4px;
-        }
-
-        .summary-value {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--color-text);
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
-
-        .alert-success {
-            background: rgba(50, 184, 198, 0.1);
-            color: #1D6B73;
-            border: 1px solid rgba(50, 184, 198, 0.3);
-        }
-
-        .alert-error {
-            background: rgba(192, 21, 47, 0.1);
-            color: #7A0D22;
-            border: 1px solid rgba(192, 21, 47, 0.3);
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-            flex-wrap: wrap;
-        }
-
-        .search-box {
+            flex-direction: column;
             position: relative;
-            margin-bottom: 20px;
-        }
-
-        .search-box input {
-            padding-left: 36px;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--color-text-secondary);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--color-text-secondary);
-        }
-
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 6px;
             overflow: hidden;
         }
 
-        th {
-            background: rgba(33, 128, 161, 0.05);
-            padding: 12px;
-            text-align: left;
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 20px;
             font-weight: 600;
-            font-size: 12px;
+            margin-bottom: 8px;
             color: var(--color-text);
-            border-bottom: 1px solid rgba(94, 82, 64, 0.2);
-            white-space: nowrap;
         }
 
-        td {
-            padding: 12px;
-            border-bottom: 1px solid rgba(94, 82, 64, 0.1);
+        .card-description {
             font-size: 14px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+            flex: 1;
         }
 
-        tr:hover {
-            background: rgba(33, 128, 161, 0.02);
+        .card-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .status-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+        .badge-public {
+            background: rgba(40, 167, 69, 0.15);
+            color: #1e7e34;
+        }
+
+        .badge-admin {
+            background: rgba(220, 53, 69, 0.15);
+            color: #c82333;
+        }
+
+        .card-arrow {
+            margin-top: 16px;
+            color: var(--color-primary);
+            font-size: 14px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .status-present {
-            background: rgba(50, 184, 198, 0.15);
-            color: #1D6B73;
+        .card:hover .card-arrow {
+            gap: 8px;
         }
 
-        .status-absent {
-            background: rgba(192, 21, 47, 0.15);
-            color: #7A0D22;
+        /* Card accent colors */
+        .card-attendance {
+            border-top: 4px solid #02a2bc;
         }
 
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(33, 128, 161, 0.2);
-            border-top-color: var(--color-primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+        .card-checkin {
+            border-top: 4px solid #28a745;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .card-absent {
+            border-top: 4px solid #ffc107;
         }
 
-        .attendee-item {
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(94, 82, 64, 0.1);
+        .card-absentee-admin {
+            border-top: 4px solid #6f42c1;
+        }
+
+        .card-import {
+            border-top: 4px solid #fd7e14;
+        }
+
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
             font-size: 13px;
+            margin-top: auto;
+            padding: 20px;
         }
 
-        .attendee-item:last-child {
-            border-bottom: none;
+        .footer a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header" style="background: var(--color-bg); padding: 20px; border-radius: 12px; margin-bottom: 24px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <img src="/logo.png" alt="NLPC Logo" style="height: 80px; width: auto; border-radius: 8px; padding: 12px 20px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%);">
-                <div>
-                    <h1 style="margin: 0; color: white;">Church Attendance Tracker</h1>
-                    <p class="subtitle" style="margin: 4px 0 0 0; color: rgba(255,255,255,0.9);">Connected to database • Real-time sync</p>
+    <div class="container">
+        <div class="header">
+            <img src="/logo.png" alt="NLPC Logo" class="logo">
+            <h1>New Life Pentecostal Church</h1>
+            <p>Church Management Dashboard</p>
+        </div>
+
+        <div class="section-title">For Members</div>
+        <div class="cards-grid">
+            <a href="/checkin" class="card card-checkin">
+                <span class="card-badge badge-public">Public</span>
+                <div class="card-icon">📱</div>
+                <div class="card-title">Quick Check-In</div>
+                <div class="card-description">
+                    Check yourself in when you arrive at church. Fast and easy self-service attendance.
                 </div>
-            </div>
-            <a href="/checkin" class="btn btn-primary" style="background: var(--color-warning); color: #333; font-weight: 600; padding: 12px 20px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-                📱 Quick Check-In
+                <div class="card-arrow">Check in now →</div>
+            </a>
+
+            <a href="/absent" class="card card-absent">
+                <span class="card-badge badge-public">Public</span>
+                <div class="card-icon">🎧</div>
+                <div class="card-title">Can't Make It?</div>
+                <div class="card-description">
+                    Let us know you'll be absent and receive a text with the live stream link and password.
+                </div>
+                <div class="card-arrow">Get stream link →</div>
             </a>
         </div>
-    </div>
 
-    <div class="nav-tabs">
-        <button class="nav-tab active" onclick="switchView('attendance')">📋 Attendance</button>
-        <button class="nav-tab" onclick="switchView('members')">👥 Members</button>
-        <button class="nav-tab" onclick="switchView('reports')">📊 Reports</button>
-    </div>
+        <div class="section-title">Administration</div>
+        <div class="cards-grid">
+            <a href="/admin" class="card card-attendance">
+                <span class="card-badge badge-admin">Password</span>
+                <div class="card-icon">📋</div>
+                <div class="card-title">Attendance Tracker</div>
+                <div class="card-description">
+                    Record attendance for services, manage members, send broadcasts, and generate reports.
+                </div>
+                <div class="card-arrow">Open tracker →</div>
+            </a>
 
-    <!-- Attendance View -->
-    <div id="attendance" class="view active">
-        <div class="card">
-            <h2>Record Attendance</h2>
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>Service Date</label>
-                    <input type="date" id="serviceDate" onchange="setTimeout(loadExistingAttendance, 100)" />
+            <a href="/absentee-admin" class="card card-absentee-admin">
+                <span class="card-badge badge-admin">Password</span>
+                <div class="card-icon">📊</div>
+                <div class="card-title">Absentee Management</div>
+                <div class="card-description">
+                    View and manage absentee check-ins, prayer requests, and livestream access records.
                 </div>
-                <div class="form-group">
-                    <label>Service Type</label>
-                    <select id="serviceType" onchange="setTimeout(loadExistingAttendance, 100)">
-                        <option value="">Select a service</option>
-                        <option value="Sunday AM - EAC">Sunday AM - EAC</option>
-                        <option value="Sunday School">Sunday School</option>
-                        <option value="Sunday PM - NLPC">Sunday PM - NLPC</option>
-                        <option value="Wednesday PM">Wednesday PM</option>
-                        <option value="Revival Service">Revival Service</option>
-                        <option value="Prayer Meeting">Prayer Meeting</option>
-                    </select>
+                <div class="card-arrow">View absentees →</div>
+            </a>
+
+            <a href="/import-members" class="card card-import">
+                <span class="card-badge badge-admin">Password</span>
+                <div class="card-icon">📤</div>
+                <div class="card-title">Import Members</div>
+                <div class="card-description">
+                    Import members from Planning Center CSV exports to sync your church directory.
                 </div>
-            </div>
-            <div id="attendanceAlert"></div>
+                <div class="card-arrow">Import CSV →</div>
+            </a>
         </div>
 
-        <div class="card">
-            <h3>Mark Attendance</h3>
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="memberSearch" placeholder="Search members..." />
-            </div>
-            <ul id="membersList" class="member-list"><div class="empty-state"><div class="empty-state-icon">⏳</div><p>Loading members...</p></div></ul>
-        </div>
-
-        <div class="card actions">
-            <button class="btn btn-success" onclick="submitAttendance()">✓ Save Attendance</button>
-            <button class="btn btn-secondary" onclick="resetAttendance()">↻ Reset</button>
-            <button class="btn btn-danger" onclick="deleteService()">🗑 Delete Service</button>
+        <div class="footer">
+            <p>New Life Pentecostal Church</p>
+            <p style="margin-top: 8px; font-size: 12px; opacity: 0.7;">
+                Powered by NLPC Church Management System
+            </p>
         </div>
     </div>
-
-    <!-- Members View -->
-    <div id="members" class="view">
-        <div class="card" style="background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%); color: white; margin-bottom: 20px;">
-            <h3 style="margin-bottom: 16px;">📢 Broadcast Message to All Members</h3>
-            <div class="form-group">
-                <label style="color: rgba(255,255,255,0.9);">Subject (for email)</label>
-                <input type="text" id="broadcastSubject" placeholder="Message from NLPC" style="background: white; color: #333;" />
-            </div>
-            <div class="form-group">
-                <label style="color: rgba(255,255,255,0.9);">Message</label>
-                <textarea id="broadcastMessage" rows="3" placeholder="Enter your message here..." style="background: white; color: #333; width: 100%; padding: 10px; border-radius: 6px; border: none; font-family: inherit;"></textarea>
-            </div>
-            <div class="actions" style="margin-top: 12px;">
-                <button class="btn" style="background: var(--color-warning); color: #333;" onclick="sendBroadcast('email')">📧 Email All</button>
-                <button class="btn" style="background: var(--color-warning); color: #333;" onclick="sendBroadcast('sms')">📱 SMS All</button>
-                <button class="btn" style="background: var(--color-warning); color: #333;" onclick="sendBroadcast('both')">📧📱 Both</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h3 style="margin: 0;">Member Directory</h3>
-                <button class="btn btn-success" onclick="openAddMemberModal()">+ Add Member</button>
-            </div>
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="directorySearch" placeholder="Search members..." />
-            </div>
-            <div style="overflow-x: auto;">
-                <table id="membersTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Birthdate</th>
-                            <th>Anniversary</th>
-                            <th>Address</th>
-                            <th>City</th>
-                            <th>State</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="membersTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Reports View -->
-    <div id="reports" class="view">
-        <div class="card">
-            <h2>Attendance Reports</h2>
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>From Date</label>
-                    <input type="date" id="reportFromDate" />
-                </div>
-                <div class="form-group">
-                    <label>To Date</label>
-                    <input type="date" id="reportToDate" />
-                </div>
-            </div>
-            <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
-        </div>
-
-        <div id="reportResults"></div>
-    </div>
-
-    <!-- Add Member Modal -->
-    <div id="addMemberModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin: 0;">Add New Member</h3>
-                <button onclick="closeAddMemberModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
-            </div>
-            <form id="addMemberForm" onsubmit="submitNewMember(event)">
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>First Name *</label>
-                        <input type="text" id="newMemberFirstName" required />
-                    </div>
-                    <div class="form-group">
-                        <label>Last Name *</label>
-                        <input type="text" id="newMemberLastName" required />
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="newMemberEmail" />
-                    </div>
-                    <div class="form-group">
-                        <label>Phone</label>
-                        <input type="tel" id="newMemberPhone" />
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Birthdate</label>
-                        <input type="date" id="newMemberBirthdate" />
-                    </div>
-                    <div class="form-group">
-                        <label>Anniversary</label>
-                        <input type="date" id="newMemberAnniversary" />
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Address</label>
-                    <input type="text" id="newMemberAddress" placeholder="Street address" />
-                </div>
-                <div class="grid-3">
-                    <div class="form-group">
-                        <label>City</label>
-                        <input type="text" id="newMemberCity" />
-                    </div>
-                    <div class="form-group">
-                        <label>State</label>
-                        <input type="text" id="newMemberState" />
-                    </div>
-                    <div class="form-group">
-                        <label>Zip</label>
-                        <input type="text" id="newMemberZip" />
-                    </div>
-                </div>
-                <div id="addMemberAlert"></div>
-                <div class="actions" style="justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closeAddMemberModal()">Cancel</button>
-                    <button type="submit" class="btn btn-success">Add Member</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Member Modal -->
-    <div id="editMemberModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin: 0;">Edit Member</h3>
-                <button onclick="closeEditMemberModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
-            </div>
-            <form id="editMemberForm" onsubmit="submitEditMember(event)">
-                <input type="hidden" id="editMemberId" />
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>First Name *</label>
-                        <input type="text" id="editMemberFirstName" required />
-                    </div>
-                    <div class="form-group">
-                        <label>Last Name *</label>
-                        <input type="text" id="editMemberLastName" required />
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="editMemberEmail" />
-                    </div>
-                    <div class="form-group">
-                        <label>Phone</label>
-                        <input type="tel" id="editMemberPhone" />
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Birthdate</label>
-                        <input type="date" id="editMemberBirthdate" />
-                    </div>
-                    <div class="form-group">
-                        <label>Anniversary</label>
-                        <input type="date" id="editMemberAnniversary" />
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Address</label>
-                    <input type="text" id="editMemberAddress" placeholder="Street address" />
-                </div>
-                <div class="grid-3">
-                    <div class="form-group">
-                        <label>City</label>
-                        <input type="text" id="editMemberCity" />
-                    </div>
-                    <div class="form-group">
-                        <label>State</label>
-                        <input type="text" id="editMemberState" />
-                    </div>
-                    <div class="form-group">
-                        <label>Zip</label>
-                        <input type="text" id="editMemberZip" />
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="editMemberStatus">
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                    </select>
-                </div>
-                <div id="editMemberAlert"></div>
-                <div class="actions" style="justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closeEditMemberModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Login Overlay -->
-    <div id="loginOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%); z-index: 2000; align-items: center; justify-content: center;">
-        <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
-            <img src="/logo.png" alt="NLPC Logo" style="height: 80px; width: auto; margin-bottom: 20px; border-radius: 8px; padding: 12px 20px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); background: linear-gradient(135deg, #02a2bc 0%, #0a7a92 100%);">
-            <h2 style="margin: 0 0 8px 0; color: #333;">Church Attendance Tracker</h2>
-            <p style="color: #666; margin-bottom: 24px;">Please enter the password to continue</p>
-            <form onsubmit="verifyPassword(event)">
-                <div class="form-group">
-                    <input type="password" id="loginPassword" placeholder="Enter password" required style="text-align: center; font-size: 16px;" />
-                </div>
-                <div id="loginAlert" style="margin-bottom: 16px;"></div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Login</button>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        // Get local date in YYYY-MM-DD format (avoids UTC timezone shift)
-        function getLocalDate(date = new Date()) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        // Initialize
-        const today = getLocalDate();
-        document.getElementById('serviceDate').value = today;
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        document.getElementById('reportFromDate').value = getLocalDate(thirtyDaysAgo);
-        document.getElementById('reportToDate').value = today;
-
-        // State - load from database
-        let members = [];
-        let selectedAttendees = new Set();
-        const API_BASE = '/.netlify/functions';
-
-        // Load members from database
-        async function loadMembers() {
-            try {
-                const response = await fetch(`${API_BASE}/get-members`);
-                if (response.ok) {
-                    const data = await response.json();
-                    members = data.members || [];
-                    console.log('✅ Loaded', members.length, 'members from Planning Center');
-                    renderMembersList();
-                    showMembersTable();
-                } else {
-                    console.error('Failed to load members:', response.statusText);
-                    showAlert(document.getElementById('attendanceAlert'), 'Error loading members from database', 'error');
-                }
-            } catch (error) {
-                console.error('Error loading members:', error);
-                showAlert(document.getElementById('attendanceAlert'), 'Error: Could not connect to database', 'error');
-            }
-        }
-
-        // View switching
-        function switchView(viewName) {
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewName).classList.add('active');
-            event.target.classList.add('active');
-            
-            if (viewName === 'members') {
-                showMembersTable();
-            }
-            if (viewName === 'reports') document.getElementById('reportResults').innerHTML = '';
-        }
-
-        // Attendance Functions
-        function renderMembersList() {
-            const list = document.getElementById('membersList');
-            const searchTerm = document.getElementById('memberSearch').value.toLowerCase();
-            
-            const filtered = members.filter(m => {
-                const fullName = `${m.first_name || m.firstName} ${m.last_name || m.lastName}`.toLowerCase();
-                return fullName.includes(searchTerm);
-            });
-
-            if (filtered.length === 0) {
-                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No members found.</p></div>';
-                return;
-            }
-
-            list.innerHTML = filtered.map((member) => {
-                const firstName = member.first_name || member.firstName || '';
-                const lastName = member.last_name || member.lastName || '';
-                const email = member.email || '';
-                const phone = member.phone || '';
-                return `
-                <li class="member-item">
-                    <div class="member-info">
-                        <div class="member-name">${firstName} ${lastName}</div>
-                        <div class="member-contact">${email} ${phone}</div>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" 
-                               ${selectedAttendees.has(member.id) ? 'checked' : ''} 
-                               onchange="toggleAttendee('${member.id}', this.checked)">
-                    </div>
-                </li>
-            `;
-            }).join('');
-        }
-
-        function toggleAttendee(memberId, checked) {
-            if (checked) {
-                selectedAttendees.add(memberId);
-            } else {
-                selectedAttendees.delete(memberId);
-            }
-        }
-
-        async function submitAttendance() {
-            const serviceDate = document.getElementById('serviceDate').value;
-            const serviceType = document.getElementById('serviceType').value;
-            const alertEl = document.getElementById('attendanceAlert');
-
-            if (!serviceDate || !serviceType) {
-                showAlert(alertEl, 'Please select both date and service type', 'error');
-                return;
-            }
-
-            // Allow saving with zero attendees (will clear the service record)
-            if (selectedAttendees.size === 0) {
-                if (!confirm('No members selected. This will clear all attendance for this service. Continue?')) {
-                    return;
-                }
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/record-attendance`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        date: serviceDate,
-                        serviceType: serviceType,
-                        attendeeIds: Array.from(selectedAttendees)
-                    })
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('✅ Attendance saved:', result);
-                    showAlert(alertEl, `✓ Recorded ${selectedAttendees.size} attendees for ${serviceType}`, 'success');
-                    setTimeout(() => resetAttendance(), 2000);
-                } else {
-                    const error = await response.json();
-                    console.error('API error:', error);
-                    showAlert(alertEl, `Error: ${error.error || 'Failed to save'}`, 'error');
-                }
-            } catch (error) {
-                console.error('Error submitting attendance:', error);
-                showAlert(alertEl, `Error: ${error.message}`, 'error');
-            }
-        }
-
-        function resetAttendance() {
-            selectedAttendees.clear();
-            document.getElementById('memberSearch').value = '';
-            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-            renderMembersList();
-        }
-
-        async function deleteService() {
-            const serviceDate = document.getElementById('serviceDate').value;
-            const serviceType = document.getElementById('serviceType').value;
-            const alertEl = document.getElementById('attendanceAlert');
-
-            if (!serviceDate || !serviceType) {
-                showAlert(alertEl, 'Please select both date and service type', 'error');
-                return;
-            }
-
-            if (!confirm(`Are you sure you want to DELETE all attendance records for ${serviceType} on ${serviceDate}? This cannot be undone.`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/delete-attendance`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        date: serviceDate,
-                        serviceType: serviceType
-                    })
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('✅ Service deleted:', result);
-                    showAlert(alertEl, `✓ Deleted ${result.deletedCount} attendance records for ${serviceType}`, 'success');
-                    resetAttendance();
-                } else {
-                    const error = await response.json();
-                    console.error('API error:', error);
-                    showAlert(alertEl, `Error: ${error.error || 'Failed to delete'}`, 'error');
-                }
-            } catch (error) {
-                console.error('Error deleting service:', error);
-                showAlert(alertEl, `Error: ${error.message}`, 'error');
-            }
-        }
-
-        // Member Functions
-        function showMembersTable() {
-            const tbody = document.getElementById('membersTableBody');
-            const searchTerm = document.getElementById('directorySearch').value.toLowerCase();
-            
-            const filtered = members.filter(m => {
-                const firstName = m.first_name || m.firstName || '';
-                const lastName = m.last_name || m.lastName || '';
-                const email = m.email || '';
-                const fullName = `${firstName} ${lastName}`.toLowerCase();
-                return fullName.includes(searchTerm) || email.toLowerCase().includes(searchTerm);
-            });
-
-            tbody.innerHTML = filtered.map((member) => {
-                const firstName = member.first_name || member.firstName || '';
-                const lastName = member.last_name || member.lastName || '';
-                const email = member.email || '';
-                const phone = member.phone || '';
-                const birthdate = member.birthdate ? new Date(member.birthdate).toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) : '—';
-                const anniversary = member.anniversary ? new Date(member.anniversary).toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) : '—';
-                const address = member.address_line1 || '—';
-                const city = member.city || '—';
-                const state = member.state || '—';
-                const status = member.status || 'Active';
-                return `
-                <tr>
-                    <td><strong>${firstName} ${lastName}</strong></td>
-                    <td><a href="mailto:${email}" style="color: var(--color-primary); text-decoration: none;">${email || '—'}</a></td>
-                    <td><a href="tel:${phone}" style="color: var(--color-primary); text-decoration: none;">${phone || '—'}</a></td>
-                    <td>${birthdate}</td>
-                    <td>${anniversary}</td>
-                    <td>${address}</td>
-                    <td>${city}</td>
-                    <td>${state}</td>
-                    <td><span class="status-badge" style="background: ${status === 'Active' ? 'rgba(50,184,198,0.15)' : 'rgba(167,169,169,0.15)'}; color: ${status === 'Active' ? '#1D6B73' : '#627C71'}">${status}</span></td>
-                    <td style="white-space: nowrap;">
-                        <button class="btn btn-sm btn-secondary" onclick="openEditMemberModal('${member.id}')" style="margin-right: 4px;">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteMember('${member.id}')">Delete</button>
-                    </td>
-                </tr>
-            `;
-            }).join('');
-        }
-
-        // Load existing attendance for a date/service
-        async function loadExistingAttendance() {
-            const serviceDate = document.getElementById('serviceDate').value;
-            const serviceType = document.getElementById('serviceType').value;
-
-            if (!serviceDate || !serviceType) return;
-
-            try {
-                const queryParams = new URLSearchParams({ 
-                    fromDate: serviceDate, 
-                    toDate: serviceDate,
-                    serviceType: serviceType 
-                });
-                const url = `${API_BASE}/get-attendance?${queryParams}`;
-                console.log('Loading attendance from:', url);
-                
-                const response = await fetch(url);
-                console.log('Response status:', response.status);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Full attendance ', data);
-                    const records = data.records || [];
-                    console.log('Records found:', records.length);
-                    console.log('All records:', records);
-                    
-                    // Find the matching service - handle ISO date format
-                    const service = records.find(r => {
-                        // Extract just the date part from ISO timestamp
-                        const dbDate = r.date.split('T')[0];
-                        const dateMatch = dbDate === serviceDate;
-                        const typeMatch = r.service_type === serviceType;
-                        console.log(`Checking record: date="${dbDate}" vs "${serviceDate}" (${dateMatch}), type="${r.service_type}" vs "${serviceType}" (${typeMatch})`);
-                        return dateMatch && typeMatch;
-                    });
-                    
-                    console.log('Matched service:', service);
-                    if (service) {
-                        console.log('Service present members:', service.present.length);
-                    }
-                    
-                    if (service) {
-                        // Clear current selection
-                        selectedAttendees.clear();
-                        
-                        // Re-check those who were present
-                        service.present.forEach(member => {
-                            console.log('Checking member:', member.id, member.first_name, member.last_name);
-                            selectedAttendees.add(member.id);
-                        });
-                        
-                        // Re-render the list to show checked boxes
-                        renderMembersList();
-                        showAlert(document.getElementById('attendanceAlert'), `✓ Loaded ${service.present.length} attendees from previous record`, 'success');
-                    } else {
-                        console.log('No matching service found');
-                    }
-                } else {
-                    console.error('Response not ok:', response.statusText);
-                }
-            } catch (error) {
-                console.error('Error loading existing attendance:', error);
-            }
-        }
-
-        async function deleteMember(memberId) {
-            if (confirm('Are you sure?')) {
-                try {
-                    const response = await fetch(`${API_BASE}/delete-member`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ memberId })
-                    });
-
-                    if (response.ok) {
-                        members = members.filter(m => m.id !== memberId);
-                        showMembersTable();
-                        renderMembersList();
-                    } else {
-                        alert('Error deleting member');
-                    }
-                } catch (error) {
-                    console.error('Error deleting member:', error);
-                    alert('Error deleting member from database');
-                }
-            }
-        }
-
-        // Reports
-        async function generateReport() {
-            const fromDate = document.getElementById('reportFromDate').value;
-            const toDate = document.getElementById('reportToDate').value;
-            const resultsEl = document.getElementById('reportResults');
-
-            if (!fromDate || !toDate) {
-                showAlert(resultsEl, 'Please select both dates', 'error');
-                return;
-            }
-
-            resultsEl.innerHTML = '<div style="text-align: center; padding: 20px;">⏳ Loading attendance records...</div>';
-
-            try {
-                const response = await fetch(
-                    `${API_BASE}/get-attendance?fromDate=${fromDate}&toDate=${toDate}`
-                );
-
-                if (!response.ok) {
-                    throw new Error('Failed to load attendance records');
-                }
-
-                const data = await response.json();
-                const records = data.records || [];
-
-                if (records.length === 0) {
-                    resultsEl.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-state-icon">📊</div><p>No attendance records for this period</p></div></div>';
-                    return;
-                }
-
-                const totalAttendance = records.reduce((sum, r) => sum + r.present.length, 0);
-                const avgAttendance = records.length > 0 ? Math.round(totalAttendance / records.length) : 0;
-
-                const serviceBreakdown = {};
-                records.forEach(r => {
-                    const serviceType = r.service_type;
-                    serviceBreakdown[serviceType] = (serviceBreakdown[serviceType] || 0) + r.present.length;
-                });
-
-                resultsEl.innerHTML = `
-                    <div class="card">
-                        <h3>📊 Report: ${fromDate} to ${toDate}</h3>
-                        <div class="attendance-summary">
-                            <div class="summary-item">
-                                <div class="summary-label">Services Held</div>
-                                <div class="summary-value">${records.length}</div>
-                            </div>
-                            <div class="summary-item">
-                                <div class="summary-label">Total Attendance</div>
-                                <div class="summary-value">${totalAttendance}</div>
-                            </div>
-                            <div class="summary-item">
-                                <div class="summary-label">Average per Service</div>
-                                <div class="summary-value">${avgAttendance}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3>By Service Type</h3>
-                        <table>
-                            <thead><tr><th>Service Type</th><th>Total Attendees</th></tr></thead>
-                            <tbody>
-                                ${Object.entries(serviceBreakdown).map(([type, count]) => 
-                                    `<tr><td>${type}</td><td><strong>${count}</strong></td></tr>`
-                                ).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="card">
-                        <h3>Service Details with Attendees</h3>
-                        ${records.map(r => `
-                            <div style="margin-bottom: 20px; padding: 12px; background: rgba(33, 128, 161, 0.05); border-radius: 6px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                                    <div style="font-weight: 600;">
-                                        📅 ${r.date.split('T')[0]} - ${r.service_type}
-                                    </div>
-                                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                                        <button class="btn btn-sm btn-primary" onclick="emailReport('${r.date.split('T')[0]}', '${r.service_type}')">📧 Email Report</button>
-                                        <button class="btn btn-sm btn-secondary" onclick="notifyAbsentees('${r.date.split('T')[0]}', '${r.service_type}', 'email')" ${r.absent.length === 0 ? 'disabled' : ''}>📧 Email Absentees</button>
-                                        <button class="btn btn-sm btn-secondary" onclick="notifyAbsentees('${r.date.split('T')[0]}', '${r.service_type}', 'sms')" ${r.absent.length === 0 ? 'disabled' : ''}>📱 SMS Absentees</button>
-                                    </div>
-                                </div>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                    <div>
-                                        <div style="font-weight: 500; margin-bottom: 8px; font-size: 12px; color: var(--color-text-secondary);">✓ Present (${r.present.length})</div>
-                                        <div style="font-size: 13px;">
-                                            ${r.present.length > 0 ?
-                                                `<div style="padding-left: 8px;">
-                                                    ${r.present.map(a => `<div class="attendee-item">• ${a.first_name} ${a.last_name}</div>`).join('')}
-                                                </div>` :
-                                                '<em style="color: var(--color-text-secondary);">No attendees recorded</em>'
-                                            }
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div style="font-weight: 500; margin-bottom: 8px; font-size: 12px; color: var(--color-text-secondary);">✗ Absent (${r.absent.length})</div>
-                                        <div style="font-size: 13px;">
-                                            ${r.absent.length > 0 ?
-                                                `<div style="padding-left: 8px;">
-                                                    ${r.absent.map(a => `<div class="attendee-item">• ${a.first_name} ${a.last_name}</div>`).join('')}
-                                                </div>` :
-                                                '<em style="color: var(--color-text-secondary);">No absents recorded</em>'
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Error generating report:', error);
-                resultsEl.innerHTML = `<div class="card"><div class="alert alert-error">❌ Error loading report: ${error.message}</div></div>`;
-            }
-        }
-
-        // Send broadcast to all members
-        async function sendBroadcast(method) {
-            const subject = document.getElementById('broadcastSubject').value.trim();
-            const message = document.getElementById('broadcastMessage').value.trim();
-
-            if (!message) {
-                alert('Please enter a message');
-                return;
-            }
-
-            const methodLabels = { email: 'email', sms: 'SMS', both: 'email and SMS' };
-            const memberCount = members.length;
-
-            if (!confirm(`Send ${methodLabels[method]} to all ${memberCount} active members?\n\nMessage: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/broadcast`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ subject, message, method })
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    let summary = `✓ Broadcast sent!\n\n`;
-                    if (method === 'email' || method === 'both') {
-                        summary += `Emails sent: ${result.emailSent}\n`;
-                        if (result.emailFailed > 0) summary += `Emails failed: ${result.emailFailed}\n`;
-                    }
-                    if (method === 'sms' || method === 'both') {
-                        summary += `SMS sent: ${result.smsSent}\n`;
-                        if (result.smsFailed > 0) summary += `SMS failed: ${result.smsFailed}\n`;
-                    }
-                    if (result.skipped > 0) summary += `Skipped (no contact info): ${result.skipped}`;
-                    alert(summary);
-
-                    // Clear the form
-                    document.getElementById('broadcastSubject').value = '';
-                    document.getElementById('broadcastMessage').value = '';
-                } else {
-                    const error = await response.json();
-                    alert(`Error: ${error.error || 'Failed to send broadcast'}`);
-                }
-            } catch (error) {
-                console.error('Error sending broadcast:', error);
-                alert(`Error: ${error.message}`);
-            }
-        }
-
-        // Email report to pastor
-        async function emailReport(date, serviceType) {
-            const recipientEmail = prompt('Send report to email:', 'pastor@nlpc.net');
-            if (!recipientEmail) return;
-
-            try {
-                const response = await fetch(`${API_BASE}/send-report`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ date, serviceType, recipientEmail })
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    alert(`✓ Report sent to ${recipientEmail}\n\nPresent: ${result.present}\nAbsent: ${result.absent}`);
-                } else {
-                    const error = await response.json();
-                    alert(`Error: ${error.error || 'Failed to send report'}`);
-                }
-            } catch (error) {
-                console.error('Error sending report:', error);
-                alert(`Error: ${error.message}`);
-            }
-        }
-
-        // Notify absentees via email or SMS
-        async function notifyAbsentees(date, serviceType, method) {
-            const methodLabel = method === 'email' ? 'email' : 'SMS';
-            const defaultMessage = `We missed you! Hope to see you at our next service.`;
-
-            const customMessage = prompt(`Message to send via ${methodLabel}:`, defaultMessage);
-            if (!customMessage) return;
-
-            if (!confirm(`Send ${methodLabel} to all absentees for ${serviceType} on ${date}?`)) return;
-
-            try {
-                const response = await fetch(`${API_BASE}/notify-absentees`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ date, serviceType, method, message: customMessage })
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    let summary = `✓ Notifications sent!\n\n`;
-                    if (method === 'email' || method === 'both') {
-                        summary += `Emails sent: ${result.emailSent}\n`;
-                        if (result.emailFailed > 0) summary += `Emails failed: ${result.emailFailed}\n`;
-                    }
-                    if (method === 'sms' || method === 'both') {
-                        summary += `SMS sent: ${result.smsSent}\n`;
-                        if (result.smsFailed > 0) summary += `SMS failed: ${result.smsFailed}\n`;
-                    }
-                    if (result.skipped > 0) summary += `Skipped (no contact): ${result.skipped}`;
-                    alert(summary);
-                } else {
-                    const error = await response.json();
-                    alert(`Error: ${error.error || 'Failed to send notifications'}`);
-                }
-            } catch (error) {
-                console.error('Error notifying absentees:', error);
-                alert(`Error: ${error.message}`);
-            }
-        }
-
-        // Utilities
-        function showAlert(el, message, type) {
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-            el.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
-            el.style.display = 'block';
-            if (type === 'error') setTimeout(() => { el.style.display = 'none'; }, 5000);
-        }
-
-        // Add Member Modal Functions
-        function openAddMemberModal() {
-            document.getElementById('addMemberModal').style.display = 'flex';
-            document.getElementById('addMemberForm').reset();
-            document.getElementById('addMemberAlert').innerHTML = '';
-        }
-
-        function closeAddMemberModal() {
-            document.getElementById('addMemberModal').style.display = 'none';
-        }
-
-        async function submitNewMember(event) {
-            event.preventDefault();
-            const alertEl = document.getElementById('addMemberAlert');
-
-            const memberData = {
-                first_name: document.getElementById('newMemberFirstName').value.trim(),
-                last_name: document.getElementById('newMemberLastName').value.trim(),
-                email: document.getElementById('newMemberEmail').value.trim() || null,
-                phone: document.getElementById('newMemberPhone').value.trim() || null,
-                birthdate: document.getElementById('newMemberBirthdate').value || null,
-                anniversary: document.getElementById('newMemberAnniversary').value || null,
-                address_line1: document.getElementById('newMemberAddress').value.trim() || null,
-                city: document.getElementById('newMemberCity').value.trim() || null,
-                state: document.getElementById('newMemberState').value.trim() || null,
-                postal_code: document.getElementById('newMemberZip').value.trim() || null
-            };
-
-            if (!memberData.first_name || !memberData.last_name) {
-                showAlert(alertEl, 'First name and last name are required', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/members`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(memberData)
-                });
-
-                if (response.ok) {
-                    const newMember = await response.json();
-                    members.push(newMember);
-                    showMembersTable();
-                    renderMembersList();
-                    showAlert(alertEl, `✓ ${memberData.first_name} ${memberData.last_name} added successfully!`, 'success');
-                    setTimeout(() => closeAddMemberModal(), 1500);
-                } else {
-                    const error = await response.json();
-                    showAlert(alertEl, `Error: ${error.error || 'Failed to add member'}`, 'error');
-                }
-            } catch (error) {
-                console.error('Error adding member:', error);
-                showAlert(alertEl, `Error: ${error.message}`, 'error');
-            }
-        }
-
-        // Edit Member Modal Functions
-        function openEditMemberModal(memberId) {
-            const member = members.find(m => m.id === memberId);
-            if (!member) {
-                alert('Member not found');
-                return;
-            }
-
-            document.getElementById('editMemberId').value = member.id;
-            document.getElementById('editMemberFirstName').value = member.first_name || member.firstName || '';
-            document.getElementById('editMemberLastName').value = member.last_name || member.lastName || '';
-            document.getElementById('editMemberEmail').value = member.email || '';
-            document.getElementById('editMemberPhone').value = member.phone || '';
-            document.getElementById('editMemberBirthdate').value = member.birthdate ? member.birthdate.split('T')[0] : '';
-            document.getElementById('editMemberAnniversary').value = member.anniversary ? member.anniversary.split('T')[0] : '';
-            document.getElementById('editMemberAddress').value = member.address_line1 || '';
-            document.getElementById('editMemberCity').value = member.city || '';
-            document.getElementById('editMemberState').value = member.state || '';
-            document.getElementById('editMemberZip').value = member.postal_code || '';
-            document.getElementById('editMemberStatus').value = member.status || 'Active';
-            document.getElementById('editMemberAlert').innerHTML = '';
-            document.getElementById('editMemberModal').style.display = 'flex';
-        }
-
-        function closeEditMemberModal() {
-            document.getElementById('editMemberModal').style.display = 'none';
-        }
-
-        async function submitEditMember(event) {
-            event.preventDefault();
-            const alertEl = document.getElementById('editMemberAlert');
-            const memberId = document.getElementById('editMemberId').value;
-
-            const memberData = {
-                id: memberId,
-                first_name: document.getElementById('editMemberFirstName').value.trim(),
-                last_name: document.getElementById('editMemberLastName').value.trim(),
-                email: document.getElementById('editMemberEmail').value.trim() || null,
-                phone: document.getElementById('editMemberPhone').value.trim() || null,
-                birthdate: document.getElementById('editMemberBirthdate').value || null,
-                anniversary: document.getElementById('editMemberAnniversary').value || null,
-                address_line1: document.getElementById('editMemberAddress').value.trim() || null,
-                city: document.getElementById('editMemberCity').value.trim() || null,
-                state: document.getElementById('editMemberState').value.trim() || null,
-                postal_code: document.getElementById('editMemberZip').value.trim() || null,
-                status: document.getElementById('editMemberStatus').value
-            };
-
-            if (!memberData.first_name || !memberData.last_name) {
-                showAlert(alertEl, 'First name and last name are required', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/members`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(memberData)
-                });
-
-                if (response.ok) {
-                    const updatedMember = await response.json();
-                    // Update the member in the local array
-                    const index = members.findIndex(m => m.id === memberId);
-                    if (index !== -1) {
-                        members[index] = updatedMember;
-                    }
-                    showMembersTable();
-                    renderMembersList();
-                    showAlert(alertEl, `✓ ${memberData.first_name} ${memberData.last_name} updated successfully!`, 'success');
-                    setTimeout(() => closeEditMemberModal(), 1500);
-                } else {
-                    const error = await response.json();
-                    showAlert(alertEl, `Error: ${error.error || 'Failed to update member'}`, 'error');
-                }
-            } catch (error) {
-                console.error('Error updating member:', error);
-                showAlert(alertEl, `Error: ${error.message}`, 'error');
-            }
-        }
-
-        // Authentication Functions
-        function checkAuth() {
-            const isAuthenticated = sessionStorage.getItem('nlpc_authenticated') === 'true';
-            const loginOverlay = document.getElementById('loginOverlay');
-
-            if (!isAuthenticated) {
-                loginOverlay.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            } else {
-                loginOverlay.style.display = 'none';
-                document.body.style.overflow = '';
-            }
-        }
-
-        async function verifyPassword(event) {
-            event.preventDefault();
-            const password = document.getElementById('loginPassword').value;
-            const alertEl = document.getElementById('loginAlert');
-
-            try {
-                const response = await fetch(`${API_BASE}/verify-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password })
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        sessionStorage.setItem('nlpc_authenticated', 'true');
-                        document.getElementById('loginOverlay').style.display = 'none';
-                        document.body.style.overflow = '';
-                        loadMembers();
-                    } else {
-                        showAlert(alertEl, 'Incorrect password', 'error');
-                    }
-                } else {
-                    showAlert(alertEl, 'Incorrect password', 'error');
-                }
-            } catch (error) {
-                console.error('Error verifying password:', error);
-                showAlert(alertEl, 'Error connecting to server', 'error');
-            }
-        }
-
-        // Event listeners for search
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
-
-            // Only load members if authenticated
-            if (sessionStorage.getItem('nlpc_authenticated') === 'true') {
-                loadMembers();
-            }
-
-            document.getElementById('memberSearch')?.addEventListener('input', renderMembersList);
-            document.getElementById('directorySearch')?.addEventListener('input', showMembersTable);
-        });
-
-        // Close modal when clicking outside
-        document.getElementById('addMemberModal')?.addEventListener('click', function(e) {
-            if (e.target === this) closeAddMemberModal();
-        });
-        document.getElementById('editMemberModal')?.addEventListener('click', function(e) {
-            if (e.target === this) closeEditMemberModal();
-        });
-
-        // Initial load
-        window.addEventListener('load', () => {
-            checkAuth();
-            if (sessionStorage.getItem('nlpc_authenticated') === 'true') {
-                loadMembers();
-            }
-        });
-    </script>
 </body>
 </html>
