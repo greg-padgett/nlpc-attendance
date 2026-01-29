@@ -83,6 +83,26 @@ exports.handler = async (event) => {
       return respond(400, { error: 'Invalid reason. Must be: sick, vacation, business, or other' });
     }
 
+    // Validate phone number against members database
+    const cleanedPhone = phone.replace(/\D/g, '');
+    const memberResult = await pool.query(`
+      SELECT id, first_name, last_name, phone
+      FROM members
+      WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone, '(', ''), ')', ''), '-', ''), ' ', '') = $1
+         OR REPLACE(REPLACE(REPLACE(REPLACE(phone, '(', ''), ')', ''), '-', ''), ' ', '') = $2
+      LIMIT 1
+    `, [cleanedPhone, '1' + cleanedPhone]);
+
+    if (memberResult.rows.length === 0) {
+      return respond(403, {
+        error: 'Phone number not found in member directory. Please contact the church office if you believe this is an error.',
+        notMember: true
+      });
+    }
+
+    const member = memberResult.rows[0];
+    console.log(`Validated member: ${member.first_name} ${member.last_name} (ID: ${member.id})`);
+
     // Determine service date (default to today)
     const effectiveDate = serviceDate || new Date().toISOString().split('T')[0];
 
