@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const crypto = require('crypto');
 
 let pool;
 if (process.env.DATABASE_URL) {
@@ -20,6 +21,7 @@ try {
 }
 
 const TWILIO_PHONE = process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM_NUMBER;
+const SITE_URL = process.env.URL || 'https://nlpc-attendance.netlify.app';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,6 +35,17 @@ const respond = (statusCode, body) => ({
   headers: corsHeaders,
   body: JSON.stringify(body)
 });
+
+// Generate a unique 6-character access code
+const generateAccessCode = () => {
+  // Use uppercase letters and numbers, avoiding confusing characters (0, O, I, 1, L)
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(crypto.randomInt(chars.length));
+  }
+  return code;
+};
 
 // Format phone number for Twilio
 const formatPhone = (phone) => {
@@ -105,13 +118,14 @@ exports.handler = async (event) => {
     const checkin = insertResult.rows[0];
     console.log(`Manual absence recorded: ${memberName} for ${serviceDate}`);
 
-    // Try to send SMS if requested
+    // Generate access code and send SMS if requested
     let smsSent = false;
     let smsError = null;
+    let accessCode = null;
 
     if (sendLink && normalizedPhone) {
       try {
-        // Get the current active Vimeo password
+        // Check if there's an active stream configured
         const vimeoResult = await pool.query(`
           SELECT video_id, password, video_url
           FROM vimeo_passwords
@@ -121,32 +135,62 @@ exports.handler = async (event) => {
         `);
 
         if (vimeoResult.rows.length > 0 && twilioClient && TWILIO_PHONE) {
-          const vimeo = vimeoResult.rows[0];
-          const videoUrl = vimeo.video_url || `https://vimeo.com/${vimeo.video_id}`;
+          // Generate unique access code
+          let codeGenerated = false;
+          let attempts = 0;
+          while (!codeGenerated && attempts < 10) {
+            accessCode = generateAccessCode();
+            try {
+              // Set expiration to 24 hours from now
+              const expiresAt = new Date();
+              expiresAt.setHours(expiresAt.getHours() + 24);
 
-          // Format the SMS message
-          const firstName = memberName.split(' ')[0];
-          const smsMessage = `NLPC Live Stream Access\n\nHi ${firstName}! Here's your live stream link:\n\n${videoUrl}\n\nPassword: ${vimeo.password}\n\nWe're praying for you!`;
+              await pool.query(`
+                INSERT INTO stream_access_codes (code, member_name, phone, absentee_checkin_id, expires_at)
+                VALUES ($1, $2, $3, $4, $5)
+              `, [accessCode, memberName.trim(), normalizedPhone, checkin.id, expiresAt.toISOString()]);
 
-          const phoneNumber = formatPhone(normalizedPhone);
-          if (phoneNumber && phoneNumber.length >= 11) {
-            await twilioClient.messages.create({
-              body: smsMessage,
-              from: TWILIO_PHONE,
-              to: phoneNumber
-            });
-            smsSent = true;
+              codeGenerated = true;
+              console.log(`Generated access code ${accessCode} for ${memberName.trim()}, expires ${expiresAt.toISOString()}`);
+            } catch (codeErr) {
+              // Code collision, try again
+              if (codeErr.code === '23505') { // unique_violation
+                attempts++;
+                console.log(`Code collision, attempt ${attempts}`);
+              } else {
+                throw codeErr;
+              }
+            }
+          }
 
-            // Update the record to indicate livestream was sent
-            await pool.query(`
-              UPDATE absentee_checkins
-              SET livestream_sent = true, livestream_sent_at = CURRENT_TIMESTAMP
-              WHERE id = $1
-            `, [checkin.id]);
+          if (codeGenerated) {
+            // Send SMS with watch link
+            const watchUrl = `${SITE_URL}/watch?code=${accessCode}`;
+            const firstName = memberName.split(' ')[0];
+            const smsMessage = `NLPC Live Stream\n\nHi ${firstName}! Your access code is:\n\n${accessCode}\n\nWatch here: ${watchUrl}\n\nCode expires in 24 hours. We're praying for you!`;
 
-            console.log(`SMS sent to ${phoneNumber} for manual absence ${checkin.id}`);
+            const phoneNumber = formatPhone(normalizedPhone);
+            if (phoneNumber && phoneNumber.length >= 11) {
+              await twilioClient.messages.create({
+                body: smsMessage,
+                from: TWILIO_PHONE,
+                to: phoneNumber
+              });
+              smsSent = true;
+
+              // Update the record to indicate livestream was sent
+              await pool.query(`
+                UPDATE absentee_checkins
+                SET livestream_sent = true, livestream_sent_at = CURRENT_TIMESTAMP
+                WHERE id = $1
+              `, [checkin.id]);
+
+              console.log(`SMS sent to ${phoneNumber} with access code ${accessCode}`);
+            } else {
+              smsError = 'Invalid phone number format';
+            }
           } else {
-            smsError = 'Invalid phone number format';
+            smsError = 'Unable to generate access code';
           }
         } else if (!twilioClient || !TWILIO_PHONE) {
           smsError = 'SMS service not configured';
