@@ -485,12 +485,19 @@
             // Set password display
             document.getElementById('streamPassword').textContent = data.password;
 
-            // Embed video
-            const videoUrl = data.videoUrl || `https://player.vimeo.com/video/${data.videoId}`;
+            // Embed video - use video_url if provided, otherwise construct from video_id
+            // For Vimeo events (recurring live), format is: https://vimeo.com/event/EVENT_ID/embed
+            // For regular videos, format is: https://player.vimeo.com/video/VIDEO_ID
+            let embedUrl = data.videoUrl;
+            if (!embedUrl && data.videoId) {
+                // Check if it looks like an event ID or regular video ID
+                embedUrl = `https://player.vimeo.com/video/${data.videoId}`;
+            }
+
             document.getElementById('videoContainer').innerHTML = `
                 <iframe
-                    src="${videoUrl}?autoplay=1"
-                    allow="autoplay; fullscreen; picture-in-picture"
+                    src="${embedUrl}"
+                    allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
                     allowfullscreen>
                 </iframe>
             `;
