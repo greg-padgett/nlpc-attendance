@@ -334,8 +334,8 @@
             </div>
 
             <div class="stream-info">
-                <strong>Password:</strong> <span id="streamPassword"></span>
-                <br><small>If prompted, enter this password to view the stream</small>
+                <strong>Backup Password:</strong> <span id="streamPassword"></span>
+                <br><small>Only needed if the stream asks for a password</small>
             </div>
         </div>
 
@@ -490,8 +490,13 @@
             // For regular videos, format is: https://player.vimeo.com/video/VIDEO_ID
             let embedUrl = data.videoUrl;
             if (!embedUrl && data.videoId) {
-                // Check if it looks like an event ID or regular video ID
                 embedUrl = `https://player.vimeo.com/video/${data.videoId}`;
+            }
+
+            // Append password to URL so user doesn't have to enter it
+            if (data.password) {
+                const separator = embedUrl.includes('?') ? '&' : '?';
+                embedUrl = `${embedUrl}${separator}password=${encodeURIComponent(data.password)}`;
             }
 
             document.getElementById('videoContainer').innerHTML = `
