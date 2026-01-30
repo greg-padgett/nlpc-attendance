@@ -217,16 +217,6 @@
             border: none;
         }
 
-        .stream-info {
-            margin-top: 16px;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            font-size: 13px;
-            color: var(--color-text-secondary);
-            text-align: center;
-        }
-
         .footer {
             margin-top: 24px;
             text-align: center;
@@ -331,11 +321,6 @@
 
             <div class="video-container" id="videoContainer">
                 <!-- Vimeo embed will be inserted here -->
-            </div>
-
-            <div class="stream-info">
-                <strong>Backup Password:</strong> <span id="streamPassword"></span>
-                <br><small>Only needed if the stream asks for a password</small>
             </div>
         </div>
 
@@ -482,22 +467,10 @@
             const firstName = data.memberName.split(' ')[0];
             document.getElementById('welcomeName').textContent = `Welcome, ${firstName}!`;
 
-            // Set password display
-            document.getElementById('streamPassword').textContent = data.password;
-
             // Embed video - use video_url if provided, otherwise construct from video_id
             // For Vimeo events (recurring live), format is: https://vimeo.com/event/EVENT_ID/embed
             // For regular videos, format is: https://player.vimeo.com/video/VIDEO_ID
-            let embedUrl = data.videoUrl;
-            if (!embedUrl && data.videoId) {
-                embedUrl = `https://player.vimeo.com/video/${data.videoId}`;
-            }
-
-            // Append password to URL so user doesn't have to enter it
-            if (data.password) {
-                const separator = embedUrl.includes('?') ? '&' : '?';
-                embedUrl = `${embedUrl}${separator}password=${encodeURIComponent(data.password)}`;
-            }
+            const embedUrl = data.videoUrl || `https://player.vimeo.com/video/${data.videoId}`;
 
             document.getElementById('videoContainer').innerHTML = `
                 <iframe
