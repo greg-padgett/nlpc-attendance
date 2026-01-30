@@ -397,28 +397,6 @@
             font-style: italic;
         }
 
-        .password-display {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .password-value {
-            font-size: 36px;
-            font-weight: 700;
-            font-family: 'Courier New', monospace;
-            letter-spacing: 4px;
-            color: var(--color-primary);
-            margin-bottom: 8px;
-        }
-
-        .password-meta {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-        }
-
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -616,7 +594,7 @@
         <button class="nav-tab" onclick="switchView('recordAbsence')">Record Absence</button>
         <button class="nav-tab" onclick="switchView('checkins')">All Check-Ins</button>
         <button class="nav-tab" onclick="switchView('reports')">Reports</button>
-        <button class="nav-tab" onclick="switchView('password')">Live Stream Password</button>
+        <button class="nav-tab" onclick="switchView('streamSettings')">Live Stream Settings</button>
     </div>
 
     <!-- Record Absence View -->
@@ -764,78 +742,36 @@
         </div>
     </div>
 
-    <!-- Password Management View -->
-    <div id="password" class="view">
-        <div class="card">
-            <h3 class="card-title">Current Live Stream Password</h3>
-            <div id="currentPassword" class="password-display">
-                <div class="loading"></div>
-                <p>Loading...</p>
-            </div>
-            <div style="display: flex; gap: 8px; justify-content: center;">
-                <button class="btn btn-danger" onclick="changePassword()">Generate New Password</button>
-                <button class="btn btn-secondary" onclick="copyPassword()">Copy Password</button>
-            </div>
-        </div>
-
+    <!-- Stream Settings View -->
+    <div id="streamSettings" class="view">
         <div class="card">
             <h3 class="card-title">Live Stream Settings</h3>
+            <p style="color: var(--color-text-secondary); margin-bottom: 16px;">
+                Configure your Vimeo event for the watch page. Access is controlled by the unique codes sent to absentees.
+            </p>
             <div class="grid-2" style="margin-top: 16px;">
                 <div class="form-group">
-                    <label>Vimeo Video/Event ID</label>
-                    <input type="text" id="vimeoVideoId" placeholder="123456789">
+                    <label>Vimeo Event/Video ID</label>
+                    <input type="text" id="vimeoVideoId" placeholder="3680921">
                     <small style="color: var(--color-text-secondary); font-size: 12px;">
-                        The ID from your Vimeo video or live event URL
+                        The ID from your Vimeo event URL (e.g., 3680921)
                     </small>
                 </div>
                 <div class="form-group">
-                    <label>Video URL (optional)</label>
-                    <input type="text" id="vimeoVideoUrl" placeholder="https://vimeo.com/event/123456">
+                    <label>Embed URL</label>
+                    <input type="text" id="vimeoVideoUrl" placeholder="https://vimeo.com/event/3680921/embed">
                     <small style="color: var(--color-text-secondary); font-size: 12px;">
-                        The full URL to share with absentees
+                        The full embed URL for the Vimeo event
                     </small>
                 </div>
             </div>
             <button class="btn btn-primary" onclick="saveVimeoSettings()">Save Settings</button>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Automatic Password Rotation</h3>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="rotationEnabled" onchange="toggleRotation()">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-            <p style="color: var(--color-text-secondary); margin-bottom: 16px;">
-                When enabled, the password will automatically change on a schedule.
-            </p>
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>Day of Week</label>
-                    <select id="rotationDay">
-                        <option value="0">Sunday</option>
-                        <option value="1">Monday</option>
-                        <option value="2">Tuesday</option>
-                        <option value="3">Wednesday</option>
-                        <option value="4">Thursday</option>
-                        <option value="5">Friday</option>
-                        <option value="6">Saturday</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Time</label>
-                    <input type="time" id="rotationTime" value="08:00">
-                </div>
-            </div>
-            <button class="btn btn-secondary" onclick="saveRotationSchedule()">Save Schedule</button>
-            <div id="scheduleStatus" style="margin-top: 12px;"></div>
+            <div id="streamSettingsStatus" style="margin-top: 12px;"></div>
         </div>
     </div>
 
     <script>
         const API_BASE = '/.netlify/functions';
-        let currentPassword = null;
         let autoRefreshInterval = null;
         const AUTO_REFRESH_SECONDS = 30;
 
@@ -883,7 +819,7 @@
 
             if (viewName === 'dashboard') loadDashboard();
             if (viewName === 'checkins') loadCheckins();
-            if (viewName === 'password') loadPassword();
+            if (viewName === 'streamSettings') loadStreamSettings();
         }
 
         // Format reason for display
@@ -1176,157 +1112,49 @@
             }
         }
 
-        // Load Password
-        async function loadPassword() {
+        // Load Stream Settings
+        async function loadStreamSettings() {
             try {
                 const response = await fetch(`${API_BASE}/vimeo-password`);
                 const data = await response.json();
 
                 if (data.success && data.hasPassword) {
-                    currentPassword = data.current;
-                    document.getElementById('currentPassword').innerHTML = `
-                        <div class="password-value">${data.current.password}</div>
-                        <div class="password-meta">
-                            Video ID: ${data.current.videoId}<br>
-                            Created: ${new Date(data.current.createdAt).toLocaleString()}<br>
-                            Type: ${data.current.rotationType}
-                        </div>
-                    `;
                     document.getElementById('vimeoVideoId').value = data.current.videoId || '';
                     document.getElementById('vimeoVideoUrl').value = data.current.videoUrl || '';
-                } else {
-                    document.getElementById('currentPassword').innerHTML = `
-                        <div style="color: #999;">No password configured</div>
-                        <p style="font-size: 14px; margin-top: 8px;">Click "Generate New Password" to create one</p>
-                    `;
-                }
-
-                // Load rotation schedule
-                const scheduleResponse = await fetch(`${API_BASE}/rotation-schedule`);
-                const scheduleData = await scheduleResponse.json();
-                if (scheduleData.success) {
-                    document.getElementById('rotationEnabled').checked = scheduleData.schedule.enabled;
-                    document.getElementById('rotationDay').value = scheduleData.schedule.day_of_week;
-                    document.getElementById('rotationTime').value = scheduleData.schedule.time_of_day?.slice(0, 5) || '08:00';
-
-                    if (scheduleData.schedule.last_run) {
-                        document.getElementById('scheduleStatus').innerHTML = `
-                            <small style="color: #666;">Last run: ${new Date(scheduleData.schedule.last_run).toLocaleString()}</small>
-                        `;
-                    }
                 }
             } catch (error) {
-                console.error('Error loading password:', error);
+                console.error('Error loading stream settings:', error);
             }
         }
 
-        // Change Password
-        async function changePassword() {
-            if (!confirm('Generate a new password? The current password will be replaced.')) return;
-
+        // Save Vimeo Settings
+        async function saveVimeoSettings() {
             const videoId = document.getElementById('vimeoVideoId').value;
             const videoUrl = document.getElementById('vimeoVideoUrl').value;
+            const statusEl = document.getElementById('streamSettingsStatus');
 
-            if (!videoId) {
-                alert('Please enter a Vimeo Video ID first');
+            if (!videoUrl) {
+                statusEl.innerHTML = '<span style="color: var(--color-error);">Please enter an embed URL</span>';
                 return;
             }
 
             try {
                 const response = await fetch(`${API_BASE}/vimeo-password`, {
-                    method: 'POST',
+                    method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ videoId, videoUrl })
                 });
 
                 const data = await response.json();
                 if (data.success) {
-                    currentPassword = data.password;
-                    loadPassword();
-                    alert(`New password: ${data.password.password}\n\n${data.vimeoUpdated ? 'Vimeo has been updated.' : 'Note: Vimeo update pending - ' + (data.vimeoError || 'configure VIMEO_ACCESS_TOKEN')}`);
+                    statusEl.innerHTML = '<span style="color: var(--color-success);">Settings saved!</span>';
+                    setTimeout(() => statusEl.innerHTML = '', 3000);
                 } else {
-                    alert('Error: ' + (data.error || 'Failed to change password'));
-                }
-            } catch (error) {
-                console.error('Error changing password:', error);
-                alert('Error changing password');
-            }
-        }
-
-        // Copy Password
-        function copyPassword() {
-            if (currentPassword) {
-                navigator.clipboard.writeText(currentPassword.password);
-                alert('Password copied to clipboard!');
-            }
-        }
-
-        // Save Vimeo Settings
-        async function saveVimeoSettings() {
-            const videoUrl = document.getElementById('vimeoVideoUrl').value;
-
-            try {
-                const response = await fetch(`${API_BASE}/vimeo-password`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ videoUrl })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    alert('Settings saved!');
-                } else {
-                    alert('Error: ' + (data.error || 'Failed to save settings'));
+                    statusEl.innerHTML = `<span style="color: var(--color-error);">Error: ${data.error || 'Failed to save'}</span>`;
                 }
             } catch (error) {
                 console.error('Error saving settings:', error);
-                alert('Error saving settings');
-            }
-        }
-
-        // Toggle Rotation
-        async function toggleRotation() {
-            const enabled = document.getElementById('rotationEnabled').checked;
-
-            try {
-                const response = await fetch(`${API_BASE}/rotation-schedule`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ enabled })
-                });
-
-                const data = await response.json();
-                if (!data.success) {
-                    document.getElementById('rotationEnabled').checked = !enabled;
-                    alert('Error: ' + (data.error || 'Failed to toggle rotation'));
-                }
-            } catch (error) {
-                document.getElementById('rotationEnabled').checked = !enabled;
-                console.error('Error toggling rotation:', error);
-            }
-        }
-
-        // Save Rotation Schedule
-        async function saveRotationSchedule() {
-            const dayOfWeek = parseInt(document.getElementById('rotationDay').value);
-            const timeOfDay = document.getElementById('rotationTime').value;
-
-            try {
-                const response = await fetch(`${API_BASE}/rotation-schedule`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ dayOfWeek, timeOfDay: timeOfDay + ':00' })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    alert('Schedule saved!');
-                } else {
-                    alert('Error: ' + (data.error || 'Failed to save schedule'));
-                }
-            } catch (error) {
-                console.error('Error saving schedule:', error);
-                alert('Error saving schedule');
+                statusEl.innerHTML = '<span style="color: var(--color-error);">Error saving settings</span>';
             }
         }
 
